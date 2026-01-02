@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>POS Warkop PRO - V19.3 (Compress Fixed + Animasi)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        /* === SYSTEM STYLES === */
+        body { 
+            height: 100vh; 
+            height: 100dvh; /* Dynamic Viewport Height untuk Mobile Browser */
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* === PRINT STYLES === */
+        #print-area { display: none; }
+        @media print {
+            body * { visibility: hidden; }
+            #print-area, #print-area * { visibility: visible; }
+            #print-area { display: block !important; position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0; }
+            
+            .print-invoice { font-family: 'Courier New', monospace; font-size: 12px; width: 58mm; color: black; padding-bottom: 20px;}
+            .print-invoice .header { text-align: center; margin-bottom: 10px; }
+            .print-invoice .logo { width: 50px; height: 50px; object-fit: contain; margin: 0 auto; display: block; }
+            .print-invoice .shop-name { font-weight: bold; font-size: 14px; margin-top: 5px; }
+            .print-invoice .divider { border-bottom: 1px dashed black; margin: 5px 0; }
+            .print-invoice .item-row { margin-bottom: 4px; }
+            .print-invoice .item-main { display: flex; justify-content: space-between; font-weight: bold; font-size: 12px; }
+            .print-invoice .item-addon { font-size: 10px; color: #444; margin-left: 10px; display: block; font-style: italic;}
+            .print-invoice .total-section { text-align: right; margin-top: 5px; }
+            .print-invoice .total-value { font-size: 18px; font-weight: 900; }
+            .print-invoice .payment-badge { margin-top: 10px; border: 2px solid black; padding: 5px; text-align: center; font-weight: 900; font-size: 16px; letter-spacing: 2px; text-transform: uppercase; border-radius: 5px; }
+
+            .print-dapur { font-family: Arial, sans-serif; width: 58mm; color: black; }
+            .print-dapur .header { text-align: center; font-weight: 900; font-size: 18px; border: 3px solid black; padding: 5px; margin-bottom: 10px; text-transform: uppercase; line-height: 1.2; }
+            .print-dapur .meta { font-size: 12px; margin-bottom: 10px; border-bottom: 2px solid black; padding-bottom: 5px; }
+            .print-dapur .item { margin-bottom: 15px; border-bottom: 1px dashed #aaa; padding-bottom: 5px; display: flex; align-items: start; }
+            .print-dapur .qty { font-size: 26px; font-weight: 900; min-width: 40px; margin-right: 5px; line-height: 1; }
+            .print-dapur .name { font-size: 16px; font-weight: bold; line-height: 1.2; }
+            .print-dapur .item.done { opacity: 0.5; } 
+            .print-dapur .item.done .qty { font-size: 14px; font-weight: normal; }
+            .print-dapur .item.done .name { text-decoration: none; font-weight: normal; }
+            .print-dapur .details { flex: 1; }
+            .print-dapur .addon-badge { font-weight: bold; font-size: 12px; border: 1px solid black; padding: 1px 4px; display: inline-block; margin-top: 2px; border-radius: 4px; margin-right: 2px;}
+            .print-dapur .note { font-style: italic; font-size: 12px; margin-top: 2px; color: #333; }
+        }
+
+        /* UI Styles */
+        .numpad-btn { transition: all 0.1s; }
+        .numpad-btn:active { transform: scale(0.95); }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
+        .active-nav { color: #ef4444; background-color: #fef2f2; border-radius: 8px; }
+        .active-nav-mobile { color: #ef4444; }
+        .active-filter { background-color: #ef4444 !important; color: white !important; border-color: #ef4444 !important; }
+        
+        .mobile-nav-height { height: 60px; }
+        
+        /* === MOBILE & TABLET CART STYLES === */
+        @media (max-width: 768px) {
+            .mobile-cart-container { 
+                position: fixed; 
+                bottom: 0; 
+                left: 0; 
+                right: 0; 
+                z-index: 100; 
+                width: 100%; 
+                background: white;
+                border-top-left-radius: 1.5rem; 
+                border-top-right-radius: 1.5rem; 
+                box-shadow: 0 -5px 25px rgba(0,0,0,0.15);
+                height: 85vh !important;
+                transform: translateY(calc(100% - 130px)); 
+                transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); 
+                display: flex;
+                flex-direction: column;
+            }
+            .cart-toggle-handle { display: none !important; }
+        }
+
+        @media (min-width: 769px) {
+            .mobile-cart-container { 
+                position: static !important; 
+                height: 100% !important; 
+                width: 24rem !important; 
+                border-radius: 0 !important; 
+                transform: none !important; 
+                box-shadow: none !important;
+                display: flex;
+                flex-direction: column;
+                border-left: 1px solid #e5e7eb;
+            }
+            .cart-toggle-handle { display: none !important; }
+            #cart-items, #cart-header { display: block !important; }
+            #drag-handle { display: none !important; } 
+        }
+
+        /* Area Handle */
+        .sheet-handle-area {
+            touch-action: none; 
+            cursor: grab;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            padding-top: 15px;
+            padding-bottom: 10px;
+            background: white;
+            border-top-left-radius: 1.5rem; 
+            border-top-right-radius: 1.5rem;
+            flex-shrink: 0;
+        }
+        .sheet-handle-area:active { cursor: grabbing; }
+        .is-dragging { transition: none !important; }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+            20%, 40%, 60%, 80% { transform: translateX(4px); }
+        }
+        .animate-shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; border-color: #ef4444 !important; background-color: #fef2f2 !important; }
+
+        .checkmark-circle { width: 80px; height: 80px; position: relative; display: inline-block; vertical-align: top; margin-bottom: 20px;}
+        .checkmark-circle .background { width: 80px; height: 80px; border-radius: 50%; background: #22c55e; position: absolute; }
+        .checkmark-circle .checkmark { border-radius: 5px; }
+        .checkmark-circle .checkmark.draw:after { animation-duration: 800ms; animation-timing-function: ease; animation-name: checkmark; transform: scaleX(-1) rotate(135deg); }
+        .checkmark-circle .checkmark:after { opacity: 1; height: 40px; width: 20px; transform-origin: left top; border-right: 10px solid white; border-top: 10px solid white; content: ''; left: 20px; top: 40px; position: absolute; }
+        @keyframes checkmark { 0% { height: 0; width: 0; opacity: 1; } 20% { height: 0; width: 20px; opacity: 1; } 40% { height: 40px; width: 20px; opacity: 1; } 100% { height: 40px; width: 20px; opacity: 1; } }
+
+        #toast-container { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); z-index: 100; pointer-events: none; transition: all 0.3s; opacity: 0; }
+        #toast-container.show { bottom: 100px; opacity: 1; }
+        
+        .grayscale { filter: grayscale(100%); opacity: 0.6; }
+        .chart-btn { transition: all 0.2s; }
+        .chart-btn.active { background-color: #3b82f6; color: white; border-color: #3b82f6; }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans h-screen flex flex-col md:flex-row overflow-hidden text-gray-800">
+
+    <aside class="hidden md:flex w-20 bg-white shadow-lg flex-col items-center py-4 space-y-6 z-20 h-full shrink-0">
+        <div class="h-14 w-14 rounded-full overflow-hidden border-2 border-red-500 bg-white flex items-center justify-center">
+            <img id="sidebar-logo" src="https://via.placeholder.com/150?text=LOGO" class="w-full h-full object-contain">
+        </div>
+        <nav class="flex flex-col space-y-2 w-full text-center px-2">
+            <button onclick="nav('kasir')" id="nav-kasir" class="nav-btn active-nav p-2 text-red-500 hover:bg-red-50 rounded-lg transition"><i class="fas fa-cash-register text-xl"></i><div class="text-[10px]">Kasir</div></button>
+            <button onclick="nav('open-bill')" id="nav-open-bill" class="nav-btn p-2 text-gray-400 hover:bg-gray-50 rounded-lg transition"><i class="fas fa-receipt text-xl"></i><div class="text-[10px]">Bills</div></button>
+            <button onclick="nav('katalog')" id="nav-katalog" class="nav-btn p-2 text-gray-400 hover:bg-gray-50 rounded-lg transition"><i class="fas fa-box text-xl"></i><div class="text-[10px]">Menu</div></button>
+            <button onclick="nav('laporan')" id="nav-laporan" class="nav-btn p-2 text-gray-400 hover:bg-gray-50 rounded-lg transition"><i class="fas fa-chart-bar text-xl"></i><div class="text-[10px]">Lapor</div></button>
+            <button onclick="nav('setting')" id="nav-setting" class="nav-btn p-2 text-gray-400 hover:bg-gray-50 rounded-lg transition"><i class="fas fa-cog text-xl"></i><div class="text-[10px]">Set</div></button>
+        </nav>
+    </aside>
+
+    <main class="flex-1 flex overflow-hidden relative pb-[60px] md:pb-0 h-full">
+        <section id="page-kasir" class="page-section w-full h-full flex flex-col md:flex-row">
+            <div class="flex-1 flex flex-col bg-gray-50 h-full overflow-hidden order-1">
+                <div class="p-3 bg-white shadow-sm z-10 flex gap-3 items-center shrink-0">
+                    <div class="md:hidden h-8 w-8 rounded-full overflow-hidden border border-red-500"><img id="mobile-logo" src="https://via.placeholder.com/150?text=LOGO" class="w-full h-full object-contain"></div>
+                    <div class="flex-1 relative">
+                        <i class="fas fa-search absolute left-3 top-2.5 text-gray-400 text-sm"></i>
+                        <input type="text" id="search" placeholder="Cari..." class="bg-gray-100 pl-9 pr-8 py-2 rounded-full text-sm w-full focus:outline-none focus:ring-1 focus:ring-red-400" onkeyup="renderMenu()">
+                        <button id="clear-search-btn" onclick="clearSearch()" class="absolute right-2 top-1.5 text-gray-400 hover:text-red-500 hidden p-1">
+                            <i class="fas fa-times-circle"></i>
+                        </button>
+                    </div>
+                    <div class="flex bg-gray-100 rounded-lg p-0.5 shrink-0 items-center">
+                        <button onclick="toggleSortAZ()" id="btn-sort-az" class="p-2 rounded text-gray-500 hover:text-red-500 mr-1" title="Urutkan A-Z">
+                             <i class="fas fa-sort-alpha-down"></i>
+                        </button>
+                        <div class="w-[1px] h-6 bg-gray-300 mx-1"></div>
+                        <button onclick="setViewMode('grid')" id="btn-view-grid" class="p-2 rounded text-gray-500 hover:text-red-500"><i class="fas fa-th-large"></i></button>
+                        <button onclick="setViewMode('list')" id="btn-view-list" class="p-2 rounded text-gray-500 hover:text-red-500"><i class="fas fa-list"></i></button>
+                    </div>
+                </div>
+                <div class="px-3 pt-2 flex gap-2 overflow-x-auto pb-2 scrollbar-hide shrink-0">
+                    <button onclick="filterMenu('all')" id="cat-all" class="filter-btn active-filter whitespace-nowrap px-4 py-1.5 bg-white border rounded-full text-xs font-bold shadow-sm">Semua</button>
+                    <button onclick="filterMenu('makanan')" id="cat-makanan" class="filter-btn whitespace-nowrap px-4 py-1.5 bg-white border rounded-full text-xs font-bold shadow-sm">Makanan</button>
+                    <button onclick="filterMenu('minuman')" id="cat-minuman" class="filter-btn whitespace-nowrap px-4 py-1.5 bg-white border rounded-full text-xs font-bold shadow-sm">Minuman</button>
+                    <button onclick="filterMenu('snack')" id="cat-snack" class="filter-btn whitespace-nowrap px-4 py-1.5 bg-white border rounded-full text-xs font-bold shadow-sm">Snack</button>
+                </div>
+                <div id="menu-container" class="flex-1 overflow-y-auto p-3 pb-[350px]"></div>
+            </div>
+
+            <div id="cart-panel" class="mobile-cart-container bg-white md:shadow-xl flex flex-col z-40 h-full max-h-screen">
+                
+                <div id="drag-handle" class="sheet-handle-area hover:bg-gray-100 active:bg-gray-200 active:scale-95 transition-all duration-200 ease-in-out shrink-0 cursor-pointer">
+                    <div class="w-12 h-1.5 bg-gray-300 rounded-full pointer-events-none"></div>
+                </div>
+
+                <div id="cart-header" class="px-4 py-2 border-b bg-white shrink-0 relative flex flex-col gap-2">
+                    <div class="flex p-1 bg-gray-100 rounded-lg">
+                        <button onclick="setOrderType('Dine In')" id="btn-dine" class="flex-1 py-1.5 text-xs font-bold bg-blue-600 text-white shadow-md rounded-lg transition">
+                            <i class="fas fa-utensils mr-1"></i> Dine In
+                        </button>
+                        <button onclick="setOrderType('Take Away')" id="btn-take" class="flex-1 py-1.5 text-xs font-bold bg-gray-100 text-gray-400 rounded-lg transition">
+                            <i class="fas fa-shopping-bag mr-1"></i> Take Away
+                        </button>
+                    </div>
+
+                    <div class="relative">
+                        <input id="customer-name" type="text" placeholder="Masukkan Nama Pelanggan..." class="w-full bg-yellow-50 border border-yellow-200 focus:border-yellow-500 focus:bg-white text-gray-800 rounded-lg px-3 py-2 text-sm outline-none transition-all placeholder:text-gray-400 font-medium">
+                        <i class="fas fa-user absolute right-3 top-2.5 text-yellow-400 text-xs"></i>
+                    </div>
+                </div>
+                
+                <div id="cart-items" class="flex-1 overflow-y-auto p-3 space-y-2 bg-gray-50 min-h-0"></div>
+                
+                <div class="p-4 bg-white border-t shrink-0 relative z-50 shadow-[0_-5px_15px_rgba(0,0,0,0.05)] pb-[calc(70px+env(safe-area-inset-bottom))] md:pb-4">
+                    <div class="flex justify-between items-center mb-2">
+                        <div class="flex items-center gap-2">
+                             <button onclick="clearCart()" class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition" title="Hapus Semua">
+                                <i class="fas fa-trash-alt text-sm"></i>
+                            </button>
+                            <span class="text-xs text-gray-500 font-medium">Total Tagihan</span>
+                        </div>
+                        <span id="cart-total" class="text-2xl font-black text-gray-800">Rp 0</span>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-2 mb-2">
+                        <button onclick="saveOpenBill()" class="py-3 bg-blue-50 text-blue-700 rounded-xl font-bold text-xs border border-blue-200 shadow-sm active:scale-95 transition flex items-center justify-center gap-1">
+                            <i class="fas fa-save"></i> Simpan
+                        </button>
+                        <button onclick="openPaymentModal()" class="py-3 bg-green-600 text-white rounded-xl font-bold text-xs shadow-md active:scale-95 transition flex items-center justify-center gap-1 hover:bg-green-700">
+                            <i class="fas fa-money-bill-wave"></i> BAYAR
+                        </button>
+                    </div>
+                    
+                    <button onclick="printDapurForSave(document.getElementById('customer-name').value, false)" class="w-full py-4 bg-orange-100 border border-orange-200 text-orange-700 rounded-lg text-sm hover:bg-orange-200 active:scale-95 transition font-extrabold flex items-center justify-center gap-2">
+                        <i class="fas fa-fire text-orange-600"></i> CETAK STRUK DAPUR
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section id="page-open-bill" class="page-section hidden w-full h-full p-4 md:p-6 overflow-y-auto bg-gray-50">
+            <h2 class="text-xl font-bold mb-4 text-gray-800">Daftar Open Bill</h2>
+            <div id="bill-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 pb-48"></div>
+        </section>
+
+        <section id="page-katalog" class="page-section hidden w-full h-full p-4 md:p-6 overflow-y-auto bg-gray-50">
+            <div class="flex flex-col md:flex-row gap-6 h-full pb-48">
+                <div class="w-full md:w-1/3 bg-white p-4 rounded-xl shadow h-fit overflow-y-auto">
+                    <h3 class="font-bold text-lg mb-4 border-b pb-2">Input Menu</h3>
+                    <input type="hidden" id="menu-edit-id">
+                    <div class="mb-4 text-center">
+                        <label for="menu-img-input" class="cursor-pointer block relative group">
+                            <img id="menu-img-preview" src="https://via.placeholder.com/150?text=Upload+Foto" class="w-full h-32 object-cover rounded bg-gray-100 border-2 border-dashed border-gray-300">
+                            <div class="absolute inset-0 bg-black/50 hidden group-hover:flex items-center justify-center text-white text-xs rounded">Ganti</div>
+                        </label>
+                        <input type="file" id="menu-img-input" class="hidden" accept="image/*" onchange="previewMenuImg(this)">
+                    </div>
+                    <div class="space-y-3">
+                        <input type="text" id="input-nama" class="w-full p-2 border rounded text-sm" placeholder="Nama Menu">
+                        <input type="number" id="input-harga" class="w-full p-2 border rounded text-sm" placeholder="Harga">
+                        <div class="flex gap-2">
+                             <select id="input-kategori" class="w-2/3 p-2 border rounded text-sm bg-white">
+                                <option value="makanan">Makanan</option>
+                                <option value="minuman">Minuman</option>
+                                <option value="snack">Snack</option>
+                            </select>
+                            <select id="input-status" class="w-1/3 p-2 border rounded text-sm bg-white font-bold text-gray-600">
+                                <option value="tersedia">Ada</option>
+                                <option value="habis">Habis</option>
+                            </select>
+                        </div>
+                        <div class="bg-gray-50 p-2 rounded border border-gray-200">
+                            <label class="block text-xs font-bold mb-1 text-gray-600">Daftar Add-ons</label>
+                            <div id="addon-inputs-container" class="space-y-2 mb-2"></div>
+                            <button onclick="addAddonRow()" class="w-full text-xs bg-white text-blue-600 px-2 py-1.5 rounded border border-blue-200 hover:bg-blue-50">+ Tambah Baris Addon</button>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="simpanMenu()" class="flex-1 bg-green-500 text-white py-2 rounded font-bold hover:bg-green-600">Simpan</button>
+                            <button onclick="resetMenuForm()" class="w-20 bg-gray-200 text-gray-600 py-2 rounded font-bold hover:bg-gray-300">Reset</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="w-full md:w-2/3 bg-white rounded-xl shadow overflow-hidden flex flex-col h-[60vh] md:h-auto mt-4 md:mt-0">
+                    <div class="p-3 bg-gray-100 border-b font-bold text-sm">Daftar Menu</div>
+                    <div class="overflow-y-auto flex-1 p-0 md:p-4 pb-24">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-gray-50 text-gray-500 border-b"><tr><th class="p-3">Menu</th><th class="p-3 text-right">Harga</th><th class="p-3 text-center">Sts</th><th class="p-3 text-center">Aksi</th><th class="p-3 text-center">Urut</th></tr></thead>
+                            <tbody id="table-katalog-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="page-laporan" class="page-section hidden w-full h-full p-4 md:p-6 overflow-y-auto bg-gray-50">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-2">
+                <h2 class="text-xl font-bold text-gray-800">Laporan Penjualan</h2>
+                <div class="flex gap-2 w-full md:w-auto">
+                    <input type="date" id="filter-date" class="border p-2 rounded text-sm" onchange="renderLaporan()">
+                    <button onclick="downloadExcel()" class="bg-green-600 text-white px-4 py-2 rounded shadow text-sm flex-1 md:flex-none whitespace-nowrap"><i class="fas fa-file-excel mr-2"></i> Excel</button>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl shadow-lg mb-6 border border-gray-100">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-gray-800"><i class="fas fa-chart-line mr-2 text-blue-500"></i>Analitik Omset</h3>
+                </div>
+                <div class="flex bg-gray-100 p-1 rounded-lg w-fit mb-4">
+                    <button onclick="updateChartFilter('7')" id="chart-btn-7" class="chart-btn active px-4 py-1.5 text-xs font-bold rounded-md">7 Hari</button>
+                    <button onclick="updateChartFilter('30')" id="chart-btn-30" class="chart-btn px-4 py-1.5 text-xs font-bold rounded-md text-gray-500 hover:text-gray-700">30 Hari</button>
+                    <button onclick="updateChartFilter('365')" id="chart-btn-365" class="chart-btn px-4 py-1.5 text-xs font-bold rounded-md text-gray-500 hover:text-gray-700">1 Tahun</button>
+                </div>
+                
+                <div class="h-64 w-full relative">
+                    <canvas id="salesChart"></canvas>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
+                <div class="bg-white p-3 rounded-xl shadow border-l-4 border-blue-500"><div class="text-gray-500 text-[10px]">Total Omset</div><div class="text-lg md:text-2xl font-bold text-blue-600" id="lap-omset">Rp 0</div></div>
+                <div class="bg-white p-3 rounded-xl shadow border-l-4 border-green-500"><div class="text-gray-500 text-[10px]">Transaksi</div><div class="text-lg md:text-2xl font-bold" id="lap-transaksi">0</div></div>
+            </div>
+            <div class="bg-white rounded-xl shadow overflow-hidden pb-48">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left"><thead class="bg-gray-100 text-gray-600"><tr><th class="p-3">Waktu</th><th class="p-3">Cust</th><th class="p-3 text-right">Total</th></tr></thead><tbody id="table-laporan-body"></tbody></table>
+                </div>
+            </div>
+        </section>
+
+        <section id="page-setting" class="page-section hidden w-full h-full p-4 md:p-8 overflow-y-auto bg-white">
+            <h2 class="text-xl font-bold mb-6">Pengaturan</h2>
+            <div class="max-w-lg space-y-4 pb-48">
+                <div class="p-4 bg-gray-50 rounded-lg border">
+                    <h3 class="font-bold text-sm mb-3 text-gray-700">Identitas Toko</h3>
+                    <div class="flex items-center gap-4 border p-3 rounded-lg bg-white mb-3">
+                        <div class="w-16 h-16 bg-gray-100 border rounded flex items-center justify-center overflow-hidden shrink-0"><img id="setting-logo-preview" src="https://via.placeholder.com/150" class="w-full h-full object-contain"></div>
+                        <div class="flex-1 overflow-hidden"><label class="block text-xs font-bold mb-1">Upload Logo</label><input type="file" accept="image/*" onchange="handleLogoUpload(this)" class="text-xs text-gray-500 w-full"></div>
+                    </div>
+                    <div class="flex items-center gap-4 border p-3 rounded-lg bg-white mb-3">
+                        <div class="w-16 h-16 bg-gray-100 border rounded flex items-center justify-center overflow-hidden shrink-0"><img id="setting-qris-preview" src="https://via.placeholder.com/150?text=QRIS" class="w-full h-full object-cover"></div>
+                        <div class="flex-1 overflow-hidden"><label class="block text-xs font-bold mb-1">Upload QRIS</label><input type="file" accept="image/*" onchange="handleQrisUpload(this)" class="text-xs text-gray-500 w-full"></div>
+                    </div>
+                    <div><label class="block text-xs font-bold">Nama Toko</label><input type="text" id="shop-name" class="w-full border p-2 rounded mt-1 text-sm bg-white"></div>
+                    <div class="mt-2"><label class="block text-xs font-bold">Alamat</label><input type="text" id="shop-address" class="w-full border p-2 rounded mt-1 text-sm bg-white"></div>
+                    <div class="mt-2"><label class="block text-xs font-bold text-blue-600">Google Sheet URL</label><input type="text" id="g-sheet-url" class="w-full border p-2 rounded mt-1 text-sm bg-white"></div>
+                    <button onclick="saveSettings()" class="w-full bg-green-600 text-white py-2 rounded-lg font-bold shadow-sm hover:bg-green-700 mt-4 text-xs">SIMPAN PENGATURAN</button>
+                </div>
+                <div class="p-4 bg-blue-50 rounded-lg border border-blue-100">
+                    <h3 class="font-bold text-sm mb-2 text-blue-800"><i class="fas fa-database mr-2"></i>Backup & Restore Data</h3>
+                    <div class="flex gap-2 mb-3">
+                        <button onclick="backupData()" class="flex-1 bg-blue-600 text-white py-2 rounded text-xs font-bold shadow hover:bg-blue-700"><i class="fas fa-download mr-1"></i> Download Backup</button>
+                    </div>
+                    <div class="border-t border-blue-200 pt-3">
+                        <label class="block text-[10px] font-bold text-blue-800 mb-1">Restore File Backup (.json)</label>
+                        <div class="flex gap-2">
+                            <input type="file" id="restore-file-input" accept=".json" class="text-[10px] text-gray-500 w-full bg-white border p-1 rounded">
+                            <button onclick="restoreData()" class="bg-orange-500 text-white px-3 py-1 rounded text-xs font-bold hover:bg-orange-600">Restore</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-4 bg-red-50 rounded-lg border border-red-100">
+                     <h3 class="font-bold text-sm mb-2 text-red-800">Zona Bahaya</h3>
+                     <button onclick="resetLaporan()" class="w-full border border-orange-300 text-orange-600 bg-white py-2 rounded text-xs font-bold hover:bg-orange-50 mb-2">Hapus Riwayat Transaksi (Menu Aman)</button>
+                     <button onclick="resetData()" class="w-full border border-red-300 text-red-500 bg-white py-2 rounded text-xs font-bold hover:bg-red-50">Reset Semua Data (Pabrik)</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 w-full bg-white border-t flex justify-around py-2 z-50 text-gray-400 text-[10px] safe-area-bottom shadow-[0_-2px_10px_rgba(0,0,0,0.05)] mobile-nav-height">
+        <button onclick="nav('kasir')" id="mob-kasir" class="flex flex-col items-center gap-1 w-1/5 active-nav-mobile text-red-500"><i class="fas fa-cash-register text-lg"></i><span>Kasir</span></button>
+        <button onclick="nav('open-bill')" id="mob-open-bill" class="flex flex-col items-center gap-1 w-1/5"><i class="fas fa-receipt text-lg"></i><span>Bills</span></button>
+        <button onclick="nav('katalog')" id="mob-katalog" class="flex flex-col items-center gap-1 w-1/5"><i class="fas fa-box text-lg"></i><span>Menu</span></button>
+        <button onclick="nav('laporan')" id="mob-laporan" class="flex flex-col items-center gap-1 w-1/5"><i class="fas fa-chart-bar text-lg"></i><span>Lapor</span></button>
+        <button onclick="nav('setting')" id="mob-setting" class="flex flex-col items-center gap-1 w-1/5"><i class="fas fa-cog text-lg"></i><span>Set</span></button>
+    </nav>
+
+    <div id="success-anim" class="fixed inset-0 bg-black/80 z-[60] hidden flex flex-col items-center justify-center text-white backdrop-blur-sm">
+        <div class="checkmark-circle"><div class="background"></div><div class="checkmark draw"></div></div>
+        <div class="text-2xl font-bold mt-4 animate-bounce">Pembayaran Berhasil!</div><div class="text-sm mt-2">Mencetak struk...</div>
+    </div>
+    
+    <div id="toast-container" class="bg-gray-800 text-white px-4 py-2 rounded-full shadow-lg text-xs font-bold flex items-center gap-2">
+        <i class="fas fa-check-circle text-green-400"></i> <span id="toast-message">Item ditambahkan</span>
+    </div>
+
+    <div id="payment-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="bg-gray-800 text-white p-3 flex justify-between items-center"><h3 class="font-bold">Pembayaran</h3><button onclick="closeModal()" class="text-gray-400 hover:text-white px-2"><i class="fas fa-times"></i></button></div>
+            <div class="p-4 flex-1 overflow-y-auto">
+                <div class="text-center mb-4"><div class="text-xs text-gray-500">Total Tagihan</div><div class="text-3xl font-bold text-gray-800" id="modal-total-display">Rp 0</div></div>
+                <div class="flex gap-2 mb-4">
+                    <button onclick="setPaymentMethod('cash')" id="btn-pm-cash" class="flex-1 py-2 border-2 border-green-500 bg-green-50 text-green-700 font-bold rounded text-sm">CASH</button>
+                    <button onclick="setPaymentMethod('qris')" id="btn-pm-qris" class="flex-1 py-2 border border-gray-300 text-gray-500 rounded text-sm">QRIS</button>
+                </div>
+                <div id="view-cash">
+                    <div class="bg-gray-50 p-3 rounded border mb-3">
+                        <div class="flex justify-between mb-1"><span class="text-xs">Diterima</span><span id="cash-received-display" class="font-bold text-lg">0</span></div>
+                        <div class="flex justify-between border-t pt-1"><span class="text-xs font-bold text-gray-600">KEMBALI</span><span id="change-display" class="font-bold text-xl text-green-600">0</span></div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2 mb-3">
+                        <button onclick="setUangPas()" class="bg-blue-100 text-blue-700 text-[10px] py-2 rounded font-bold">Uang Pas</button>
+                        <button onclick="addNominal(10000)" class="bg-gray-100 text-[10px] py-2 rounded">+10rb</button>
+                        <button onclick="addNominal(50000)" class="bg-gray-100 text-[10px] py-2 rounded">+50rb</button>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button onclick="inputNumpad('7')" class="bg-white border shadow-sm py-3 text-lg font-bold rounded">7</button>
+                        <button onclick="inputNumpad('8')" class="bg-white border shadow-sm py-3 text-lg font-bold rounded">8</button>
+                        <button onclick="inputNumpad('9')" class="bg-white border shadow-sm py-3 text-lg font-bold rounded">9</button>
+                        <button onclick="inputNumpad('4')" class="bg-white border shadow-sm py-3 text-lg font-bold rounded">4</button>
+                        <button onclick="inputNumpad('5')" class="bg-white border shadow-sm py-3 text-lg font-bold rounded">5</button>
+                        <button onclick="inputNumpad('6')" class="bg-white border shadow-sm py-3 text-lg font-bold rounded">6</button>
+                        <button onclick="inputNumpad('1')" class="bg-white border shadow-sm py-3 text-lg font-bold rounded">1</button>
+                        <button onclick="inputNumpad('2')" class="bg-white border shadow-sm py-3 text-lg font-bold rounded">2</button>
+                        <button onclick="inputNumpad('3')" class="bg-white border shadow-sm py-3 text-lg font-bold rounded">3</button>
+                        <button onclick="inputNumpad('C')" class="bg-red-50 text-red-500 font-bold rounded">C</button>
+                        <button onclick="inputNumpad('0')" class="bg-white border shadow-sm py-3 text-lg font-bold rounded">0</button>
+                        <button onclick="inputNumpad('00')" class="bg-white border shadow-sm py-3 text-lg font-bold rounded">00</button>
+                    </div>
+                </div>
+                <div id="view-qris" class="hidden text-center">
+                    <div class="bg-blue-50 p-4 rounded-xl border-2 border-blue-200 mb-4">
+                        <div class="text-xs text-blue-800 font-bold mb-2 uppercase tracking-widest">Scan QRIS Berikut</div>
+                        <img id="qris-display-img" src="https://via.placeholder.com/300?text=Belum+Upload+QRIS" class="w-48 h-48 object-cover mx-auto rounded-lg shadow-sm border bg-white">
+                        <div class="mt-3 text-xs text-gray-500">Total Pembayaran</div>
+                        <div class="text-2xl font-black text-gray-800 mt-1" id="qris-amount-display">Rp 0</div>
+                    </div>
+                </div>
+            </div>
+            <div class="p-3 border-t"><button onclick="processPayment()" id="btn-finish-pay" class="w-full bg-green-600 text-white py-3 rounded-xl font-bold shadow-lg text-sm">Bayar & Cetak</button></div>
+        </div>
+    </div>
+
+    <div id="print-area"></div>
+
+    <script>
+        // --- CORE DATA & STATE ---
+        let db = {
+            menu: [
+                { id: 1, nama: "Nasi Goreng", harga: 15000, kategori: "makanan", img: "", status: "tersedia", addons: [{name: "Telur", price: 3000}, {name: "Kerupuk", price: 2000}] },
+                { id: 2, nama: "Es Teh Manis", harga: 5000, kategori: "minuman", img: "", status: "tersedia", addons: [] },
+                { id: 3, nama: "Kentang Goreng", harga: 12000, kategori: "snack", img: "", status: "tersedia", addons: [{name: "Keju", price: 2000}] }
+            ],
+            cart: [], openBills: [], transaksi: [],
+            settings: { logo: null, qris: null, shopName: "Warkop Bu Raden", address: "Indonesia", sheetUrl: "" }
+        };
+        let payState = { total: 0, received: 0, change: 0, method: 'cash' };
+        let currentOrderType = 'Dine In';
+        let currentFilter = 'all';
+        let currentView = 'grid';
+        let isSortAZ = false;
+        let editId = null;
+        let salesChart = null; // CHART INSTANCE
+        let currentChartFilter = '7'; // Default 7 Hari
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if(localStorage.getItem('pos_final_db')) db = JSON.parse(localStorage.getItem('pos_final_db'));
+            db.menu.forEach(m => { if(!m.addons) m.addons = []; if(!m.status) m.status = "tersedia"; });
+            applySettings(); setViewMode('grid'); renderMenu(); renderCart(); renderKatalogTable(); renderLaporan(); renderOpenBills();
+            
+            if(window.innerWidth < 768) {
+                const sheet = document.getElementById('cart-panel');
+                const collapsedY = (sheet.offsetHeight || window.innerHeight*0.9) - 130;
+                sheet.style.transform = `translateY(${collapsedY}px)`;
+            }
+        });
+
+        function saveDB() { localStorage.setItem('pos_final_db', JSON.stringify(db)); }
+        function formatRp(n) { return 'Rp ' + n.toLocaleString('id-ID'); }
+
+        // --- NAVIGATION & VIEW ---
+        function nav(pageId) {
+            document.querySelectorAll('.page-section').forEach(el => el.classList.add('hidden'));
+            document.getElementById('page-'+pageId).classList.remove('hidden');
+            document.querySelectorAll('.nav-btn').forEach(b => { b.classList.remove('active-nav', 'text-red-500'); b.classList.add('text-gray-400'); });
+            const dBtn = document.getElementById('nav-'+pageId); if(dBtn) { dBtn.classList.add('active-nav', 'text-red-500'); dBtn.classList.remove('text-gray-400'); }
+            document.querySelectorAll('nav.md\\:hidden button').forEach(b => { b.classList.remove('active-nav-mobile', 'text-red-500'); });
+            const mBtn = document.getElementById('mob-'+pageId); if(mBtn) mBtn.classList.add('active-nav-mobile', 'text-red-500');
+            if(pageId === 'open-bill') renderOpenBills();
+            if(pageId === 'katalog') renderKatalogTable();
+            if(pageId === 'laporan') renderLaporan(); // Render grafik saat masuk halaman laporan
+        }
+
+        function setViewMode(mode) {
+            currentView = mode;
+            const btnGrid = document.getElementById('btn-view-grid'); const btnList = document.getElementById('btn-view-list');
+            if(mode === 'grid') { btnGrid.classList.add('text-red-500', 'bg-white', 'shadow'); btnList.classList.remove('text-red-500', 'bg-white', 'shadow'); } 
+            else { btnList.classList.add('text-red-500', 'bg-white', 'shadow'); btnGrid.classList.remove('text-red-500', 'bg-white', 'shadow'); }
+            renderMenu();
+        }
+        
+        function filterMenu(category) {
+            currentFilter = category;
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active-filter'));
+            document.getElementById('cat-'+category).classList.add('active-filter');
+            renderMenu();
+        }
+
+        // --- KASIR & MENU LOGIC ---
+        function toggleSortAZ() {
+            isSortAZ = !isSortAZ;
+            const btn = document.getElementById('btn-sort-az');
+            if(isSortAZ) { btn.classList.add('text-red-500', 'bg-red-50'); showToast("Urutan: A-Z"); } 
+            else { btn.classList.remove('text-red-500', 'bg-red-50'); showToast("Urutan: Manual (DB)"); }
+            renderMenu();
+        }
+
+        function renderMenu() {
+            const container = document.getElementById('menu-container'); container.innerHTML = '';
+            container.className = currentView === 'grid' ? "flex-1 overflow-y-auto p-3 grid grid-cols-2 lg:grid-cols-4 gap-3 content-start pb-[350px] md:pb-3" : "flex-1 overflow-y-auto p-3 flex flex-col gap-2 content-start pb-[350px] md:pb-3";
+            const searchInput = document.getElementById('search'); const searchKey = searchInput.value.toLowerCase();
+            const clearBtn = document.getElementById('clear-search-btn');
+            
+            if(searchKey.length > 0) clearBtn.classList.remove('hidden'); else clearBtn.classList.add('hidden');
+            
+            let menuToRender = [...db.menu];
+            if(isSortAZ) { menuToRender.sort((a, b) => a.nama.localeCompare(b.nama)); }
+
+            menuToRender.forEach(m => {
+                if((currentFilter === 'all' || m.kategori.toLowerCase() === currentFilter.toLowerCase()) && m.nama.toLowerCase().includes(searchKey)) {
+                    const img = m.img || 'https://via.placeholder.com/150?text=Menu';
+                    const isHabis = m.status === 'habis';
+                    const grayClass = isHabis ? 'grayscale' : '';
+                    const clickAction = isHabis ? '' : `onclick="addToCart(${m.id})"`;
+                    const habisOverlay = isHabis ? '<div class="absolute inset-0 flex items-center justify-center"><span class="bg-red-600 text-white text-xs font-bold px-2 py-1 rounded shadow">HABIS</span></div>' : '';
+
+                    if(currentView === 'grid') {
+                        container.innerHTML += `<div ${clickAction} class="bg-white p-2 rounded-xl shadow-sm border border-transparent ${isHabis ? 'cursor-not-allowed' : 'active:border-red-400 cursor-pointer active:scale-95'} flex flex-col transition relative ${grayClass}"><div class="aspect-square w-full bg-gray-100 rounded-lg overflow-hidden mb-2 relative"><img src="${img}" class="w-full h-full object-cover">${habisOverlay}</div><div class="flex-1 flex flex-col justify-between"><div class="text-[10px] md:text-sm font-bold text-gray-800 leading-tight line-clamp-2">${m.nama}</div><div class="flex justify-between items-center mt-1"><div class="text-red-600 font-bold text-[10px] md:text-xs">${formatRp(m.harga)}</div><div class="bg-red-50 text-red-500 rounded-full w-5 h-5 flex items-center justify-center text-[10px]"><i class="fas fa-plus"></i></div></div></div></div>`;
+                    } else {
+                        container.innerHTML += `<div ${clickAction} class="bg-white p-2 rounded-lg shadow-sm border border-transparent ${isHabis ? 'cursor-not-allowed' : 'active:border-red-400 cursor-pointer active:scale-95'} flex items-center gap-3 transition relative ${grayClass}"><div class="relative"><img src="${img}" class="w-12 h-12 rounded bg-gray-100 object-cover">${habisOverlay}</div><div class="flex-1"><div class="font-bold text-xs md:text-sm text-gray-800">${m.nama}</div><div class="text-[10px] text-gray-400 capitalize">${m.kategori}</div></div><div class="text-right"><div class="text-red-600 font-bold text-xs">${formatRp(m.harga)}</div></div></div>`;
+                    }
+                }
+            });
+        }
+        function clearSearch() { document.getElementById('search').value = ''; renderMenu(); }
+        
+        let toastTimeout;
+        function showToast(msg) {
+            const el = document.getElementById('toast-container'); const msgEl = document.getElementById('toast-message');
+            msgEl.innerText = msg; el.classList.add('show');
+            clearTimeout(toastTimeout); toastTimeout = setTimeout(() => { el.classList.remove('show'); }, 2000);
+        }
+
+        function addToCart(id) { 
+            const m = db.menu.find(x => x.id === id); 
+            db.cart.push({...m, qty: 1, note: '', selectedAddons: []}); 
+            renderCart(); showToast(`${m.nama} ditambahkan`);
+            if(window.innerWidth < 768) {
+                const sheet = document.getElementById('cart-panel');
+                sheet.style.transform = `translateY(0)`; 
+            }
+        }
+        function toggleAddon(cartIdx, addonName, addonPrice) { const item = db.cart[cartIdx]; const existingIdx = item.selectedAddons.findIndex(x => x.name === addonName); if(existingIdx > -1) { item.selectedAddons.splice(existingIdx, 1); } else { item.selectedAddons.push({name: addonName, price: addonPrice}); } renderCart(); }
+        function clearCart() { if(db.cart.length > 0) { if(confirm("Hapus semua menu di keranjang?")) { db.cart = []; renderCart(); } } }
+
+        function renderCart() {
+            const c = document.getElementById('cart-items'); c.innerHTML = ''; let t = 0;
+            if(db.cart.length===0) c.innerHTML = '<div class="text-center text-gray-400 text-xs mt-4">Keranjang Kosong</div>';
+            db.cart.forEach((i, idx) => {
+                let addonTotal = i.selectedAddons.reduce((sum, a) => sum + a.price, 0); let unitPrice = i.harga + addonTotal; let itemTotal = unitPrice * i.qty; t += itemTotal;
+                let addonsHtml = '';
+                if(i.addons && i.addons.length > 0) {
+                    addonsHtml = '<div class="mt-1 flex flex-wrap gap-1">';
+                    i.addons.forEach(opt => { const isChecked = i.selectedAddons.find(x => x.name === opt.name) ? 'checked' : ''; addonsHtml += `<label class="flex items-center text-[9px] bg-gray-100 px-1.5 py-0.5 rounded cursor-pointer border border-gray-200 hover:bg-red-50 ${isChecked ? 'bg-red-50 border-red-200 text-red-600' : 'text-gray-600'}"><input type="checkbox" ${isChecked} onchange="toggleAddon(${idx}, '${opt.name}', ${opt.price})" class="hidden">${isChecked ? '<i class="fas fa-check mr-1 text-[8px]"></i>' : ''} ${opt.name} (+${opt.price/1000}k)</label>`; });
+                    addonsHtml += '</div>';
+                }
+                c.innerHTML += `<div class="bg-white p-2 rounded border border-gray-100 relative shadow-sm"><div class="flex justify-between font-bold text-xs text-gray-700 items-start"><div>${i.nama}</div><div>${formatRp(itemTotal)}</div></div><div class="text-[10px] text-gray-400 mb-1">${i.qty} x ${formatRp(unitPrice)}</div>${addonsHtml}<input type="text" placeholder="Catatan..." value="${i.note}" onchange="updateNote(${idx}, this.value)" class="w-full text-[10px] border-b border-dashed outline-none mt-1 bg-transparent text-gray-500"><div class="flex items-center gap-2 justify-end mt-2"><button onclick="modQty(${idx}, -1)" class="w-5 h-5 bg-gray-100 rounded text-xs text-gray-600 flex items-center justify-center">-</button><span class="text-xs font-bold w-4 text-center">${i.qty}</span><button onclick="modQty(${idx}, 1)" class="w-5 h-5 bg-red-50 text-red-500 rounded text-xs flex items-center justify-center">+</button></div><button onclick="delCart(${idx})" class="absolute -top-1 -right-1 bg-red-500 text-white w-4 h-4 rounded-full text-[8px] flex items-center justify-center">x</button></div>`;
+            });
+            document.getElementById('cart-total').innerText = formatRp(t); payState.total = t; saveDB(); c.scrollTop = c.scrollHeight;
+        }
+        function modQty(i, v) { db.cart[i].qty += v; if(db.cart[i].qty<=0) db.cart.splice(i,1); renderCart(); }
+        function delCart(i) { db.cart.splice(i, 1); renderCart(); }
+        function updateNote(i, v) { db.cart[i].note = v; saveDB(); }
+        
+        // --- UX: ORDER TYPE COLORS ---
+        function setOrderType(t) { 
+            currentOrderType = t; 
+            const dineBtn = document.getElementById('btn-dine');
+            const takeBtn = document.getElementById('btn-take');
+            
+            if(t === 'Dine In') {
+                dineBtn.className = "flex-1 py-2 text-xs font-bold bg-blue-600 text-white shadow-md rounded-lg transition";
+                takeBtn.className = "flex-1 py-2 text-xs font-bold bg-gray-100 text-gray-400 rounded-lg transition";
+            } else {
+                takeBtn.className = "flex-1 py-2 text-xs font-bold bg-yellow-500 text-white shadow-md rounded-lg transition";
+                dineBtn.className = "flex-1 py-2 text-xs font-bold bg-gray-100 text-gray-400 rounded-lg transition";
+            }
+        }
+        
+        // --- MANAJEMEN MENU ---
+        function addAddonRow(name='', price='') { const container = document.getElementById('addon-inputs-container'); const row = document.createElement('div'); row.className = "flex gap-2 items-center"; row.innerHTML = `<input type="text" placeholder="Nama (Telur)" value="${name}" class="addon-name-input w-2/3 p-1 border rounded text-xs"><input type="number" placeholder="Rp" value="${price}" class="addon-price-input w-1/3 p-1 border rounded text-xs"><button onclick="this.parentElement.remove()" class="text-red-500 text-xs"><i class="fas fa-trash"></i></button>`; container.appendChild(row); }
+        function simpanMenu() {
+            const n = document.getElementById('input-nama').value; const h = parseInt(document.getElementById('input-harga').value); const k = document.getElementById('input-kategori').value; const s = document.getElementById('input-status').value; const i = document.getElementById('menu-img-preview').src;
+            const addonRows = document.querySelectorAll('#addon-inputs-container > div'); let addons = [];
+            addonRows.forEach(row => { const aName = row.querySelector('.addon-name-input').value; const aPrice = parseInt(row.querySelector('.addon-price-input').value); if(aName && !isNaN(aPrice)) addons.push({name: aName, price: aPrice}); });
+            if(!n || !h) return alert("Lengkapi Data");
+            if(editId) { const idx = db.menu.findIndex(x => x.id === editId); db.menu[idx] = { id: editId, nama: n, harga: h, kategori: k, status: s, img: i, addons: addons }; editId = null; } else { db.menu.push({ id: Date.now(), nama: n, harga: h, kategori: k, status: s, img: i, addons: addons }); }
+            saveDB(); resetMenuForm(); renderKatalogTable(); renderMenu();
+        }
+        function editMenu(id) { const m = db.menu.find(x => x.id === id); editId = id; document.getElementById('input-nama').value = m.nama; document.getElementById('input-harga').value = m.harga; document.getElementById('input-kategori').value = m.kategori; document.getElementById('input-status').value = m.status || 'tersedia'; document.getElementById('menu-img-preview').src = m.img || 'https://via.placeholder.com/150'; const container = document.getElementById('addon-inputs-container'); container.innerHTML = ''; if(m.addons) { m.addons.forEach(a => addAddonRow(a.name, a.price)); } }
+        function resetMenuForm() { editId = null; document.getElementById('input-nama').value=''; document.getElementById('input-harga').value=''; document.getElementById('input-status').value='tersedia'; document.getElementById('addon-inputs-container').innerHTML=''; document.getElementById('menu-img-preview').src='https://via.placeholder.com/150?text=Upload+Foto'; }
+        
+        function renderKatalogTable() { 
+            const b = document.getElementById('table-katalog-body'); b.innerHTML = ''; 
+            db.menu.forEach((m, index) => { 
+                b.innerHTML += `<tr class="border-b"><td class="p-3"><img src="${m.img||'https://via.placeholder.com/50'}" class="w-8 h-8 rounded object-cover bg-gray-100"></td><td class="p-3"><div class="font-bold">${m.nama}</div><div class="text-[10px] text-gray-500">${m.kategori}</div></td><td class="p-3 text-right">${formatRp(m.harga)}</td><td class="p-3 text-center text-xs font-bold ${m.status==='habis'?'text-red-500':'text-green-500'} uppercase">${m.status}</td><td class="p-3 text-center"><button onclick="editMenu(${m.id})" class="text-blue-500 mr-2"><i class="fas fa-edit"></i></button><button onclick="hapusMenu(${m.id})" class="text-red-500"><i class="fas fa-trash"></i></button></td><td class="p-3 text-center"><button onclick="moveMenu(${index}, -1)" class="text-gray-500 hover:text-blue-600 block"><i class="fas fa-chevron-up"></i></button><button onclick="moveMenu(${index}, 1)" class="text-gray-500 hover:text-blue-600 block"><i class="fas fa-chevron-down"></i></button></td></tr>`; 
+            }); 
+        }
+
+        function moveMenu(index, direction) { if (direction === -1 && index > 0) { [db.menu[index], db.menu[index - 1]] = [db.menu[index - 1], db.menu[index]]; } else if (direction === 1 && index < db.menu.length - 1) { [db.menu[index], db.menu[index + 1]] = [db.menu[index + 1], db.menu[index]]; } saveDB(); renderKatalogTable(); renderMenu(); }
+        function hapusMenu(id) { if(confirm("Hapus?")) { db.menu = db.menu.filter(x => x.id !== id); saveDB(); renderKatalogTable(); } }
+
+        function renderLaporan() { 
+            const tr = db.transaksi || []; 
+            const filterDate = document.getElementById('filter-date').value;
+            let filteredTr = tr;
+            if (filterDate) { filteredTr = tr.filter(t => { const tDate = new Date(t.id); return `${tDate.getFullYear()}-${String(tDate.getMonth()+1).padStart(2,'0')}-${String(tDate.getDate()).padStart(2,'0')}` === filterDate; }); }
+            document.getElementById('lap-transaksi').innerText = filteredTr.length; 
+            document.getElementById('lap-omset').innerText = formatRp(filteredTr.reduce((a,b)=>a+b.total,0)); 
+            const b = document.getElementById('table-laporan-body'); b.innerHTML = ''; 
+            filteredTr.slice().reverse().forEach(t => { b.innerHTML += `<tr class="border-b hover:bg-gray-100"><td class="p-3 text-xs">${t.tanggal}</td><td class="p-3 text-xs font-bold">${t.pelanggan}</td><td class="p-3 text-right text-xs font-bold text-green-600">${formatRp(t.total)}</td></tr>`; }); 
+            
+            initChart(tr); // REFRESH CHART SAAT RENDER
+        }
+
+        // --- CHART JS LOGIC (PREMIUM & DYNAMIC) ---
+        function updateChartFilter(days) {
+            currentChartFilter = days;
+            // Update UI Button Active State
+            document.querySelectorAll('.chart-btn').forEach(btn => {
+                btn.classList.remove('active', 'text-white', 'bg-blue-500'); 
+                btn.classList.add('text-gray-500'); 
+            });
+            const activeBtn = document.getElementById('chart-btn-'+days);
+            activeBtn.classList.add('active');
+            activeBtn.classList.remove('text-gray-500');
+            
+            renderLaporan(); // Trigger re-render
+        }
+
+        function initChart(transactions) {
+            const ctx = document.getElementById('salesChart');
+            if(!ctx) return;
+            
+            // Siapkan data container
+            const grouped = {};
+            const labels = [];
+            const dataValues = [];
+
+            // Helper: Generate Array Tanggal Mundur
+            const limit = parseInt(currentChartFilter);
+            const today = new Date();
+            
+            // Loop mundur dari hari ini sebanyak 'limit' hari
+            for(let i = limit - 1; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(today.getDate() - i);
+                
+                // Format Key: "DD/MM" (untuk harian) atau "MM/YYYY" (untuk tahunan)
+                let key;
+                let label;
+                
+                if (limit === 365) {
+                    // Mode Tahun: Group by Bulan
+                    key = `${d.getMonth()+1}/${d.getFullYear()}`; // "1/2024"
+                    label = d.toLocaleString('id-ID', { month: 'short' }); // "Jan"
+                } else {
+                    // Mode Hari
+                    key = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
+                    label = `${d.getDate()}/${d.getMonth()+1}`;
+                }
+
+                if(!grouped[key]) {
+                    grouped[key] = { label: label, total: 0 };
+                }
+            }
+
+            // Isi Data Transaksi ke Container
+            transactions.forEach(t => {
+                const tDate = new Date(t.id);
+                let key;
+                if (limit === 365) {
+                    key = `${tDate.getMonth()+1}/${tDate.getFullYear()}`;
+                } else {
+                    key = `${tDate.getDate()}/${tDate.getMonth()+1}/${tDate.getFullYear()}`;
+                }
+
+                if(grouped[key]) {
+                    grouped[key].total += t.total;
+                }
+            });
+
+            // Convert Object ke Array siap pakai untuk Chart
+            Object.values(grouped).forEach(item => {
+                labels.push(item.label);
+                dataValues.push(item.total);
+            });
+
+            // Destroy Old Chart
+            if(salesChart) salesChart.destroy();
+
+            // Create Gradient
+            const canvas = ctx.getContext('2d');
+            const gradient = canvas.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, 'rgba(59, 130, 246, 0.5)'); // Blue atas
+            gradient.addColorStop(1, 'rgba(59, 130, 246, 0.0)'); // Putih bawah transparent
+
+            // Config Chart Baru
+            salesChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Omset',
+                        data: dataValues,
+                        borderColor: '#3b82f6', // Biru solid
+                        backgroundColor: gradient, // Gradient fill
+                        borderWidth: 2,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: '#3b82f6',
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        fill: true,
+                        tension: 0.4 // Garis Melengkung (Smooth)
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { 
+                            beginAtZero: true, 
+                            grid: { borderDash: [2, 4], color: '#f3f4f6' },
+                            ticks: { callback: function(value) { return (value/1000) + 'k'; }, font: {size: 10} } 
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { font: {size: 10}, maxTicksLimit: limit === 365 ? 12 : 7 }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                            titleColor: '#1f2937',
+                            bodyColor: '#1f2937',
+                            borderColor: '#e5e7eb',
+                            borderWidth: 1,
+                            padding: 10,
+                            displayColors: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Rp ' + context.parsed.y.toLocaleString('id-ID');
+                                }
+                            }
+                        }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index',
+                    },
+                }
+            });
+        }
+
+        function printDapurForSave(custName, isAuto = false) {
+            // UX Check Name
+            const nameInput = document.getElementById('customer-name');
+            if(!custName && !isAuto) {
+                nameInput.classList.add('animate-shake', 'border-red-500', 'bg-red-50');
+                setTimeout(() => nameInput.classList.remove('animate-shake', 'border-red-500', 'bg-red-50'), 500);
+                return showToast("⚠️ Nama Pelanggan Wajib Diisi!");
+            }
+            if(db.cart.length === 0) return showToast("Keranjang Kosong!");
+
+            const date = new Date().toLocaleString();
+            document.getElementById('print-area').innerHTML = `<div class="print-dapur"><div class="header">TIKET DAPUR</div><div class="meta"><div>${date}</div><div style="font-size:16px; font-weight:bold;">${custName} (${currentOrderType})</div></div>${db.cart.map(i => { const addons = i.selectedAddons.map(a => `<span class="addon-badge">+${a.name}</span>`).join(' '); if(i.printed) { return `<div class="item done"><div class="qty"><i class="fas fa-check"></i></div><div class="details"><div class="name">${i.nama} (${i.qty})</div>${addons}</div></div>`; } else { return `<div class="item"><div class="qty">${i.qty}</div><div class="details"><div class="name">${i.nama}</div>${addons}${i.note?`<div class="note">Note: ${i.note}</div>`:''}</div></div>`; } }).join('')}</div>`;
+            window.print();
+        }
+
+        async function processPayment() {
+            // UX Validation
+            const nameInput = document.getElementById('customer-name');
+            const custName = nameInput.value;
+            if(!custName) {
+                closeModal();
+                nameInput.classList.add('animate-shake', 'border-red-500', 'bg-red-50');
+                setTimeout(() => nameInput.classList.remove('animate-shake', 'border-red-500', 'bg-red-50'), 500);
+                return showToast("⚠️ Masukkan Nama Pelanggan Dulu!");
+            }
+
+            closeModal();
+            const anim = document.getElementById('success-anim'); anim.classList.remove('hidden');
+            await new Promise(r => setTimeout(r, 2000)); anim.classList.add('hidden');
+            const trx = { id: Date.now(), tanggal: new Date().toLocaleString(), pelanggan: custName, tipe: currentOrderType, total: payState.total, method: payState.method, itemsDetail: [...db.cart] };
+            if(!db.transaksi) db.transaksi = []; db.transaksi.push(trx);
+            if(db.settings.sheetUrl) fetch(db.settings.sheetUrl, { method:'POST', mode:'no-cors', body:JSON.stringify(trx) });
+            const logo = db.settings.logo ? `<img src="${db.settings.logo}" class="logo">` : '';
+            const itemsHtml = db.cart.map(i => { let unitPrice = i.harga + i.selectedAddons.reduce((s,a)=>s+a.price,0); const addonsHtml = i.selectedAddons.map(a => `<span class="item-addon">+ ${a.name} (${formatRp(a.price)})</span>`).join(''); return `<div class="item-row"><div class="item-main"><span>${i.nama} x${i.qty}</span><span>${formatRp(unitPrice * i.qty)}</span></div>${addonsHtml}</div>`; }).join('');
+            const kitchenHtml = db.cart.map(i => { const addons = i.selectedAddons.map(a => `<span class="addon-badge">+${a.name}</span>`).join(' '); if(i.printed) { return `<div class="item done"><div class="qty"><i class="fas fa-check"></i></div><div class="details"><div class="name">${i.nama} (${i.qty})</div>${addons}</div></div>`; } else { return `<div class="item"><div class="qty">${i.qty}</div><div class="details"><div class="name">${i.nama}</div>${addons}${i.note?`<div class="note">Note: ${i.note}</div>`:''}</div></div>`; } }).join('');
+            document.getElementById('print-area').innerHTML = `<div class="print-dapur"><div class="header">TIKET DAPUR</div><div class="meta"><div>${trx.tanggal}</div><div style="font-size:16px; font-weight:bold;">${trx.pelanggan} (${trx.tipe})</div></div>${kitchenHtml}</div><div style="page-break-before: always;"></div><div class="print-invoice"><div class="header">${logo}<h2 class="shop-name">${db.settings.shopName}</h2><p>${db.settings.address}</p><div class="divider"></div></div><div>${itemsHtml}</div><div class="divider"></div><div class="total-section"><div style="font-size:12px;">TOTAL</div><div class="total-value">${formatRp(payState.total)}</div><div class="payment-badge">LUNAS</div><div style="font-size:10px; margin-top:5px;">Metode: ${payState.method.toUpperCase()}</div></div><div class="divider"></div><center style="font-size:10px;">Terima Kasih<br>${trx.tanggal}</center></div>`;
+            window.print(); db.cart = []; document.getElementById('customer-name').value=''; renderCart(); saveDB();
+        }
+
+        function openPaymentModal() { 
+            if(db.cart.length===0) return showToast("Keranjang Kosong!"); 
+            // UX Validation before modal
+            const nameInput = document.getElementById('customer-name');
+            if(!nameInput.value) {
+                 nameInput.classList.add('animate-shake', 'border-red-500', 'bg-red-50');
+                 setTimeout(() => nameInput.classList.remove('animate-shake', 'border-red-500', 'bg-red-50'), 500);
+                 return showToast("⚠️ Isi Nama Pelanggan Dulu!");
+            }
+            document.getElementById('payment-modal').classList.remove('hidden'); setPaymentMethod('cash'); payState.total = db.cart.reduce((t,i)=> t + (i.harga + i.selectedAddons.reduce((s,a)=>s+a.price,0))*i.qty, 0); document.getElementById('modal-total-display').innerText = formatRp(payState.total); document.getElementById('qris-amount-display').innerText = formatRp(payState.total); updateCalc(); 
+        }
+
+        function closeModal() { document.getElementById('payment-modal').classList.add('hidden'); }
+        function setPaymentMethod(m) { payState.method = m; document.getElementById('btn-pm-cash').className = m==='cash'?"flex-1 py-2 border-2 border-green-500 bg-green-50 text-green-700 font-bold rounded text-sm":"flex-1 py-2 border border-gray-300 text-gray-500 rounded text-sm"; document.getElementById('btn-pm-qris').className = m==='qris'?"flex-1 py-2 border-2 border-blue-500 bg-blue-50 text-blue-700 font-bold rounded text-sm":"flex-1 py-2 border border-gray-300 text-gray-500 rounded text-sm"; document.getElementById('view-cash').style.display = m==='cash'?'block':'none'; document.getElementById('view-qris').style.display = m==='qris'?'block':'none'; if(m==='qris') { document.getElementById('btn-finish-pay').disabled=false; document.getElementById('qris-display-img').src = db.settings.qris || 'https://via.placeholder.com/300?text=Belum+Upload+QRIS'; } else updateCalc(); }
+        function inputNumpad(k) { if(k==='C') payState.received=0; else if(k==='00') payState.received = parseInt(payState.received.toString()+'00'); else payState.received = parseInt(payState.received.toString() + k); updateCalc(); }
+        function addNominal(n) { payState.received += n; updateCalc(); }
+        function setUangPas() { payState.received = payState.total; updateCalc(); }
+        function updateCalc() { document.getElementById('cash-received-display').innerText = payState.received.toLocaleString(); payState.change = payState.received - payState.total; const el = document.getElementById('change-display'); if(payState.change < 0) { el.innerText = "Kurang " + Math.abs(payState.change); el.className="font-bold text-xl text-red-500"; document.getElementById('btn-finish-pay').disabled=true; } else { el.innerText = formatRp(payState.change); el.className="font-bold text-xl text-green-600"; document.getElementById('btn-finish-pay').disabled=false; } }
+        
+        function saveOpenBill() { 
+            const nm = document.getElementById('customer-name').value; 
+            if(!nm) {
+                const nameInput = document.getElementById('customer-name');
+                nameInput.classList.add('animate-shake', 'border-red-500', 'bg-red-50');
+                setTimeout(() => nameInput.classList.remove('animate-shake', 'border-red-500', 'bg-red-50'), 500);
+                return showToast("⚠️ Isi Nama Pelanggan Dulu!");
+            }
+            if(db.cart.length===0) return showToast("Cart Kosong!"); 
+            
+            // Print dapur automatically when saving bill? Usually yes.
+            printDapurForSave(nm, true); 
+            
+            db.cart.forEach(item => { item.printed = true; }); db.openBills.push({ id: Date.now(), nama: nm, cart: [...db.cart], type: currentOrderType, time: new Date().toLocaleString() }); db.cart = []; document.getElementById('customer-name').value = ''; renderCart(); 
+        }
+        
+        function renderOpenBills() { const g = document.getElementById('bill-grid'); g.innerHTML = ''; db.openBills.forEach((b, idx) => { const tot = b.cart.reduce((t,i)=> t + (i.harga + (i.selectedAddons?i.selectedAddons.reduce((s,a)=>s+a.price,0):0))*i.qty, 0); g.innerHTML += `<div class="bg-white p-3 rounded shadow border-l-4 border-yellow-400 relative"><div class="flex justify-between font-bold text-sm"><span>${b.nama}</span><span>${formatRp(tot)}</span></div><div class="text-[10px] text-gray-500 mb-2">${b.time} • ${b.type}</div><div class="flex gap-2"><button onclick="restoreBill(${idx})" class="flex-1 bg-blue-500 text-white py-1 rounded text-xs font-bold">Bayar</button><button onclick="hapusBill(${idx})" class="w-8 bg-red-100 text-red-500 rounded"><i class="fas fa-trash"></i></button></div></div>`; }); }
+        function restoreBill(i) { const b = db.openBills[i]; db.cart = b.cart; document.getElementById('customer-name').value = b.nama; currentOrderType = b.type; setOrderType(b.type); db.openBills.splice(i, 1); saveDB(); nav('kasir'); renderCart(); }
+        function hapusBill(i) { if(confirm("Hapus?")) { db.openBills.splice(i, 1); saveDB(); renderOpenBills(); } }
+        /* === FUNGSI KOMPRES GAMBAR OTOMATIS (AGAR APP RINGAN) === */
+        function previewMenuImg(input) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                const reader = new FileReader();
+                
+                reader.onload = function(event) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        const MAX_WIDTH = 400; 
+                        let width = img.width;
+                        let height = img.height;
+                        if (width > height) { if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; } } else { if (height > MAX_WIDTH) { width *= MAX_WIDTH / height; height = MAX_WIDTH; } }
+                        canvas.width = width;
+                        canvas.height = height;
+                        ctx.drawImage(img, 0, 0, width, height);
+                        const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                        document.getElementById('menu-img-preview').src = dataUrl;
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+        function applySettings() { if(db.settings.logo) { document.getElementById('sidebar-logo').src = db.settings.logo; const mobLogo = document.getElementById('mobile-logo'); if(mobLogo) mobLogo.src = db.settings.logo; document.getElementById('setting-logo-preview').src = db.settings.logo; } if(db.settings.qris) { document.getElementById('setting-qris-preview').src = db.settings.qris; } document.getElementById('shop-name').value = db.settings.shopName; document.getElementById('shop-address').value = db.settings.address; document.getElementById('g-sheet-url').value = db.settings.sheetUrl || ''; }
+        function saveSettings() { db.settings.shopName = document.getElementById('shop-name').value; db.settings.address = document.getElementById('shop-address').value; db.settings.sheetUrl = document.getElementById('g-sheet-url').value; saveDB(); alert('Pengaturan Berhasil Disimpan!'); }
+        function handleLogoUpload(input) { if (input.files && input.files[0]) { var reader = new FileReader(); reader.onload = function (e) { db.settings.logo = e.target.result; saveDB(); location.reload(); }; reader.readAsDataURL(input.files[0]); } }
+        function handleQrisUpload(input) { if (input.files && input.files[0]) { var reader = new FileReader(); reader.onload = function (e) { db.settings.qris = e.target.result; document.getElementById('setting-qris-preview').src = e.target.result; saveDB(); }; reader.readAsDataURL(input.files[0]); } }
+        function downloadExcel() { let csv = "ID_Transaksi,Waktu,Pelanggan,Tipe,Metode_Bayar,Kategori_Menu,Nama_Menu,Harga_Satuan,Qty,Addons,Subtotal_Item\n"; db.transaksi.forEach(t => { const items = t.itemsDetail || []; if(items.length > 0) { items.forEach(item => { const addonTotal = item.selectedAddons.reduce((s,a)=>s+a.price,0); const unitPrice = item.harga + addonTotal; const subtotal = unitPrice * item.qty; const addonsStr = item.selectedAddons.map(a=>a.name).join(' + '); const safeName = item.nama.replace(/,/g, ' '); const safeCat = item.kategori.replace(/,/g, ' '); const safeAddons = addonsStr.replace(/,/g, ' '); csv += `${t.id},"${t.tanggal}","${t.pelanggan}",${t.tipe},${t.method},${safeCat},${safeName},${unitPrice},${item.qty},"${safeAddons}",${subtotal}\n`; }); } else { csv += `${t.id},"${t.tanggal}","${t.pelanggan}",${t.tipe},${t.method},MULTIPLE_ITEMS,"(Data Lama)",0,0,"-",${t.total}\n`; } }); const link = document.createElement("a"); link.href = "data:text/csv;charset=utf-8," + encodeURI(csv); link.download = "Laporan_POS_Detail.csv"; link.click(); }
+        function backupData() { const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(db)); const downloadAnchorNode = document.createElement('a'); downloadAnchorNode.setAttribute("href", dataStr); downloadAnchorNode.setAttribute("download", "database_warkop.json"); document.body.appendChild(downloadAnchorNode); downloadAnchorNode.click(); downloadAnchorNode.remove(); }
+        function restoreData() { const input = document.getElementById('restore-file-input'); if (!input.files[0]) return alert("Pilih file dulu!"); const file = input.files[0]; const reader = new FileReader(); reader.onload = function(e) { try { const data = JSON.parse(e.target.result); if(confirm("Yakin mau restore? Data saat ini akan tertimpa!")) { db = data; saveDB(); alert("Berhasil Restore! Halaman akan dimuat ulang."); location.reload(); } } catch(err) { alert("File rusak atau bukan database yang benar!"); } }; reader.readAsText(file); }
+        function resetLaporan() { if(confirm("Yakin hapus SEMUA riwayat transaksi sisa tes tadi? (Menu & Settingan Toko TETAP AMAN)")) { if(confirm("Serius? Data laporan akan jadi 0!")) { db.transaksi = []; saveDB(); alert("Laporan Penjualan sudah 0 kembali. Siap Opening!"); location.reload(); } } }
+        function resetData() { if(confirm("AWAS! Ini akan menghapus SEMUA DATA (Menu, Setting, Laporan). Yakin?")) { localStorage.clear(); location.reload(); } }
+
+        /* === LOGIKA DRAGGABLE BOTTOM SHEET === */
+        (function() {
+            const sheet = document.getElementById('cart-panel');
+            const dragHandle = document.getElementById('drag-handle');
+            let startY, currentY, initialSheetY;
+            let isDragging = false;
+            let isTouchInteraction = false; // Flag untuk mencegah bentrok
+            const isMobile = () => window.innerWidth < 768;
+            const getCollapsedTranslate = () => (sheet.offsetHeight || window.innerHeight * 0.9) - 130;
+            const getEventY = (e) => e.touches ? e.touches[0].clientY : e.clientY;
+
+            const startDrag = (e) => {
+                if (!isMobile()) return;
+                isDragging = true;
+                if(e.touches) isTouchInteraction = true; // Tandai ini sentuhan
+                startY = getEventY(e);
+                const style = window.getComputedStyle(sheet);
+                const matrix = new WebKitCSSMatrix(style.transform);
+                initialSheetY = matrix.m42; 
+                sheet.classList.add('is-dragging');
+            };
+
+            const onDrag = (e) => {
+                if (!isDragging || !isMobile()) return;
+                if(e.cancelable) e.preventDefault(); 
+                const deltaY = getEventY(e) - startY;
+                let newY = initialSheetY + deltaY;
+                if (newY < 0) newY = 0; // Mentok atas
+                sheet.style.transform = `translateY(${newY}px)`;
+                currentY = newY;
+            };
+
+            const endDrag = (e) => {
+                if (!isDragging || !isMobile()) return;
+                isDragging = false;
+                sheet.classList.remove('is-dragging');
+                
+                const collapsedY = getCollapsedTranslate();
+                const deltaY = currentY - initialSheetY;
+
+                if (deltaY < -50) { 
+                    sheet.style.transform = `translateY(0px)`;
+                } 
+                else if (deltaY > 50) {
+                    sheet.style.transform = `translateY(${collapsedY}px)`;
+                }
+                else if (Math.abs(deltaY) < 10) {
+                    toggleSheet(); // Tap dideteksi di sini untuk mobile
+                    if(e.cancelable) e.preventDefault(); // Cegah double trigger
+                }
+                else {
+                    if (currentY > collapsedY / 2) {
+                        sheet.style.transform = `translateY(${collapsedY}px)`;
+                    } else {
+                        sheet.style.transform = `translateY(0px)`;
+                    }
+                }
+            };
+
+            const toggleSheet = () => {
+                const style = window.getComputedStyle(sheet);
+                const matrix = new WebKitCSSMatrix(style.transform);
+                const currentPos = matrix.m42;
+                const collapsedY = getCollapsedTranslate();
+                
+                sheet.classList.remove('is-dragging');
+
+                if (currentPos > 50) { 
+                    sheet.style.transform = `translateY(0px)`; // Buka
+                } else { 
+                    sheet.style.transform = `translateY(${collapsedY}px)`; // Tutup
+                }
+            };
+
+            if(dragHandle && sheet) {
+                dragHandle.addEventListener('touchstart', startDrag, {passive: false});
+                document.addEventListener('touchmove', onDrag, {passive: false});
+                document.addEventListener('touchend', endDrag);
+                dragHandle.addEventListener('mousedown', startDrag);
+                document.addEventListener('mousemove', onDrag);
+                document.addEventListener('mouseup', endDrag);
+                dragHandle.addEventListener('click', (e) => { 
+                    if(!isMobile()) return; 
+                    // Jika ini berasal dari sentuhan, jangan jalankan (karena sudah dijalankan endDrag)
+                    if(isTouchInteraction) {
+                        isTouchInteraction = false;
+                        return;
+                    }
+                    if(!isDragging) toggleSheet(); 
+                });
+            }
+            window.addEventListener('resize', () => { if (!isMobile()) sheet.style.transform = ''; });
+        })();
+    </script>
+</body>
+</html>
