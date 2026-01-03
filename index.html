@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>POS Warkop PRO - V19.14 (Fix Struk QRIS)</title>
+    <title>POS Warkop PRO - V19.2 (Animasi Popup)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -17,6 +17,17 @@
             overscroll-behavior: none; 
         }
 
+        /* === ANIMASI POPUP (BARU) === */
+        @keyframes popupOpen {
+            0% { transform: scale(0.5); opacity: 0; }
+            80% { transform: scale(1.05); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .animate-popup-content {
+            animation: popupOpen 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
         /* === PRINT STYLES === */
         #print-area { display: none; }
         @media print {
@@ -24,30 +35,23 @@
             #print-area, #print-area * { visibility: visible; }
             #print-area { display: block !important; position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0; }
             
-            /* Struk Customer */
             .print-invoice { font-family: 'Courier New', Courier, monospace; font-size: 11px; width: 58mm; color: black; padding-bottom: 20px; padding-right: 2mm;}
             .print-invoice .header { text-align: center; margin-bottom: 10px; }
             .print-invoice .logo { width: 40px; height: 40px; object-fit: contain; margin: 0 auto; display: block; }
             .print-invoice .shop-name { font-weight: bold; font-size: 14px; margin-top: 5px; text-transform: uppercase; }
             .print-invoice .divider { border-bottom: 1px dashed black; margin: 5px 0; }
-            
-            /* Item List Rapih */
             .print-invoice .item-row { margin-bottom: 4px; display: flex; flex-direction: column; }
             .print-invoice .item-main { display: flex; justify-content: space-between; align-items: flex-start; font-weight: bold; }
-            .print-invoice .item-name { flex: 1; padding-right: 5px; word-wrap: break-word; } /* Nama menu fleksibel */
-            .print-invoice .item-price { white-space: nowrap; text-align: right; min-width: 60px; } /* Harga dikunci rata kanan */
+            .print-invoice .item-name { flex: 1; padding-right: 5px; word-wrap: break-word; }
+            .print-invoice .item-price { white-space: nowrap; text-align: right; min-width: 60px; }
             .print-invoice .item-addon { font-size: 9px; color: #333; margin-left: 10px; font-style: italic; display: block; }
-
-            /* Total Section Rapih */
             .print-invoice .total-section { margin-top: 5px; }
             .print-invoice .row-summary { display: flex; justify-content: space-between; margin-bottom: 2px; }
             .print-invoice .label { font-weight: bold; }
             .print-invoice .val { font-weight: bold; text-align: right; }
             .print-invoice .grand-total { font-size: 16px; font-weight: 900; }
-            
             .print-invoice .payment-badge { margin-top: 10px; border: 2px solid black; padding: 4px; text-align: center; font-weight: 900; font-size: 14px; letter-spacing: 2px; text-transform: uppercase; border-radius: 4px; }
 
-            /* Struk Dapur */
             .print-dapur { font-family: Arial, sans-serif; width: 58mm; color: black; padding-right: 2mm; }
             .print-dapur .header { text-align: center; font-weight: 900; font-size: 18px; border: 3px solid black; padding: 5px; margin-bottom: 10px; text-transform: uppercase; line-height: 1.2; }
             .print-dapur .meta { font-size: 12px; margin-bottom: 10px; border-bottom: 2px solid black; padding-bottom: 5px; }
@@ -68,100 +72,33 @@
         .active-nav { color: #ef4444; background-color: #fef2f2; border-radius: 8px; }
         .active-nav-mobile { color: #ef4444; }
         .active-filter { background-color: #ef4444 !important; color: white !important; border-color: #ef4444 !important; }
-        
         .mobile-nav-height { height: 60px; }
         
-        /* === MOBILE & TABLET CART STYLES === */
+        /* Mobile Cart */
         @media (max-width: 768px) {
-            .mobile-cart-container { 
-                position: fixed; 
-                bottom: 0; 
-                left: 0; 
-                right: 0; 
-                z-index: 100; 
-                width: 100%; 
-                background: white;
-                border-top-left-radius: 1.5rem; 
-                border-top-right-radius: 1.5rem; 
-                box-shadow: 0 -5px 25px rgba(0,0,0,0.15);
-                height: 85vh !important;
-                transform: translateY(110%); 
-                transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-                display: flex;
-                flex-direction: column;
-            }
+            .mobile-cart-container { position: fixed; bottom: 0; left: 0; right: 0; z-index: 100; width: 100%; background: white; border-top-left-radius: 1.5rem; border-top-right-radius: 1.5rem; box-shadow: 0 -5px 25px rgba(0,0,0,0.15); height: 85vh !important; transform: translateY(110%); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); display: flex; flex-direction: column; }
             .cart-toggle-handle { display: none !important; }
-            
-            .box-menu-list {
-                height: 85vh !important; 
-                min-height: 600px;
-            }
+            .box-menu-list { height: 85vh !important; min-height: 600px; }
         }
-
         @media (min-width: 769px) {
-            .mobile-cart-container { 
-                position: static !important; 
-                height: 100% !important; 
-                width: 24rem !important; 
-                border-radius: 0 !important; 
-                transform: none !important; 
-                box-shadow: none !important;
-                display: flex;
-                flex-direction: column;
-                border-left: 1px solid #e5e7eb;
-            }
+            .mobile-cart-container { position: static !important; height: 100% !important; width: 24rem !important; border-radius: 0 !important; transform: none !important; box-shadow: none !important; display: flex; flex-direction: column; border-left: 1px solid #e5e7eb; }
             .cart-toggle-handle { display: none !important; }
             #cart-items, #cart-header { display: block !important; }
             #drag-handle { display: none !important; } 
             #floating-cart-wrapper { display: none !important; } 
-            
-            .box-menu-list {
-                height: auto !important;
-                flex: 1;
-            }
+            .box-menu-list { height: auto !important; flex: 1; }
         }
 
-        /* Area Handle */
-        .sheet-handle-area {
-            touch-action: none; 
-            cursor: grab;
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            padding-top: 15px;
-            padding-bottom: 10px;
-            background: white;
-            border-top-left-radius: 1.5rem; 
-            border-top-right-radius: 1.5rem;
-            flex-shrink: 0;
-        }
+        .sheet-handle-area { touch-action: none; cursor: grab; width: 100%; display: flex; justify-content: center; padding-top: 15px; padding-bottom: 10px; background: white; border-top-left-radius: 1.5rem; border-top-right-radius: 1.5rem; flex-shrink: 0; }
         .sheet-handle-area:active { cursor: grabbing; }
         .is-dragging { transition: none !important; }
 
-        /* Floating Button Animations */
-        #floating-cart-wrapper {
-            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s;
-            transform: scale(1); 
-        }
-        #floating-cart-wrapper.hidden-fab {
-            transform: translateY(100px) scale(0.5);
-            opacity: 0;
-            pointer-events: none;
-        }
-        .badge-pop {
-            animation: badgePop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        @keyframes badgePop {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.5); }
-            100% { transform: scale(1); }
-        }
+        #floating-cart-wrapper { transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s; transform: scale(1); }
+        #floating-cart-wrapper.hidden-fab { transform: translateY(100px) scale(0.5); opacity: 0; pointer-events: none; }
+        .badge-pop { animation: badgePop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes badgePop { 0% { transform: scale(1); } 50% { transform: scale(1.5); } 100% { transform: scale(1); } }
 
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
-            20%, 40%, 60%, 80% { transform: translateX(4px); }
-        }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); } 20%, 40%, 60%, 80% { transform: translateX(4px); } }
         .animate-shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; border-color: #ef4444 !important; background-color: #fef2f2 !important; }
 
         .checkmark-circle { width: 80px; height: 80px; position: relative; display: inline-block; vertical-align: top; margin-bottom: 20px;}
@@ -292,7 +229,6 @@
                         <button onclick="hapusFoto()" type="button" class="absolute -right-2 -top-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center shadow-md hover:bg-red-600 z-10 border-2 border-white transition transform active:scale-90" title="Hapus Foto">
                             <i class="fas fa-times"></i>
                         </button>
-                        
                         <label for="menu-img-input" class="cursor-pointer block relative group">
                             <img id="menu-img-preview" src="https://via.placeholder.com/150?text=Upload+Foto" class="w-full h-32 object-cover rounded bg-gray-100 border-2 border-dashed border-gray-300">
                             <div class="absolute inset-0 bg-black/50 hidden group-hover:flex items-center justify-center text-white text-xs rounded">Ganti</div>
@@ -324,7 +260,6 @@
                         </div>
                     </div>
                 </div>
-                
                 <div class="w-full md:w-2/3 bg-white rounded-xl shadow overflow-hidden flex flex-col box-menu-list mt-4 md:mt-0">
                     <div class="p-3 bg-gray-100 border-b font-bold text-sm shrink-0">Daftar Menu</div>
                     <div class="flex-1 overflow-y-auto p-0 h-full">
@@ -353,7 +288,6 @@
                     <button onclick="downloadExcel()" class="bg-green-600 text-white px-4 py-2 rounded shadow text-sm flex-1 md:flex-none whitespace-nowrap"><i class="fas fa-file-excel mr-2"></i> Excel</button>
                 </div>
             </div>
-
             <div class="bg-white p-5 rounded-2xl shadow-lg mb-6 border border-gray-100">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="font-bold text-gray-800"><i class="fas fa-chart-line mr-2 text-blue-500"></i>Analitik Omset</h3>
@@ -367,7 +301,6 @@
                     <canvas id="salesChart"></canvas>
                 </div>
             </div>
-
             <div class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
                 <div class="bg-white p-3 rounded-xl shadow border-l-4 border-blue-500"><div class="text-gray-500 text-[10px]">Total Omset</div><div class="text-lg md:text-2xl font-bold text-blue-600" id="lap-omset">Rp 0</div></div>
                 <div class="bg-white p-3 rounded-xl shadow border-l-4 border-green-500"><div class="text-gray-500 text-[10px]">Transaksi</div><div class="text-lg md:text-2xl font-bold" id="lap-transaksi">0</div></div>
@@ -434,6 +367,39 @@
     
     <div id="toast-container" class="bg-gray-800 text-white px-4 py-2 rounded-full shadow-lg text-xs font-bold flex items-center gap-2">
         <i class="fas fa-check-circle text-green-400"></i> <span id="toast-message">Item ditambahkan</span>
+    </div>
+
+    <div id="menu-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 transition-opacity duration-300">
+        <div id="modal-content-box" class="bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-popup-content">
+            <div class="relative">
+                <img id="modal-menu-img" src="" class="w-full h-48 object-cover">
+                <button onclick="closeMenuModal()" class="absolute top-2 right-2 bg-black/50 text-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-black/70 transition hover:rotate-90"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-4 flex-1 overflow-y-auto">
+                <h3 id="modal-menu-name" class="font-black text-xl text-gray-800 leading-tight"></h3>
+                <p id="modal-menu-price" class="text-red-600 font-bold text-lg mb-4"></p>
+                
+                <div id="modal-addons-section" class="mb-4 hidden">
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Pilih Toping / Add-ons</label>
+                    <div id="modal-addons-list" class="space-y-2"></div>
+                </div>
+
+                <div class="flex items-center justify-between bg-gray-50 p-3 rounded-lg border">
+                    <span class="text-sm font-bold text-gray-600">Jumlah</span>
+                    <div class="flex items-center gap-3">
+                        <button onclick="adjModalQty(-1)" class="w-8 h-8 bg-white border rounded-full text-gray-600 flex items-center justify-center shadow-sm active:scale-90 font-bold hover:bg-gray-100 transition">-</button>
+                        <span id="modal-menu-qty" class="font-bold text-lg w-6 text-center">1</span>
+                        <button onclick="adjModalQty(1)" class="w-8 h-8 bg-red-500 text-white border border-red-500 rounded-full flex items-center justify-center shadow-sm active:scale-90 font-bold hover:bg-red-600 transition">+</button>
+                    </div>
+                </div>
+            </div>
+            <div class="p-3 border-t bg-white">
+                <button onclick="processAddToCart()" class="w-full bg-red-600 text-white py-3 rounded-xl font-bold shadow-lg text-sm flex justify-center items-center gap-2 active:scale-95 transition hover:bg-red-700">
+                    <span>Masuk Keranjang</span>
+                    <span id="modal-total-btn" class="bg-red-800 px-2 py-0.5 rounded text-xs"></span>
+                </button>
+            </div>
+        </div>
     </div>
 
     <div id="payment-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
@@ -504,6 +470,10 @@
         let editId = null;
         let salesChart = null; 
         let currentChartFilter = '7'; 
+        
+        // Modal State
+        let selectedMenuId = null;
+        let modalQty = 1;
 
         document.addEventListener('DOMContentLoaded', () => {
             if(localStorage.getItem('pos_final_db')) db = JSON.parse(localStorage.getItem('pos_final_db'));
@@ -582,7 +552,7 @@
                     const img = m.img || 'https://via.placeholder.com/150?text=Menu';
                     const isHabis = m.status === 'habis';
                     const grayClass = isHabis ? 'grayscale' : '';
-                    const clickAction = isHabis ? '' : `onclick="addToCart(${m.id})"`;
+                    const clickAction = isHabis ? '' : `onclick="addToCart(${m.id})"`; 
                     const habisOverlay = isHabis ? '<div class="absolute inset-0 flex items-center justify-center"><span class="bg-red-600 text-white text-xs font-bold px-2 py-1 rounded shadow">HABIS</span></div>' : '';
 
                     if(currentView === 'grid') {
@@ -602,10 +572,92 @@
             clearTimeout(toastTimeout); toastTimeout = setTimeout(() => { el.classList.remove('show'); }, 2000);
         }
 
+        /* === NEW: MENU POPUP LOGIC === */
         function addToCart(id) { 
             const m = db.menu.find(x => x.id === id); 
-            db.cart.push({...m, qty: 1, note: '', selectedAddons: []}); 
-            renderCart(); showToast(`${m.nama} ditambahkan`);
+            selectedMenuId = id;
+            modalQty = 1;
+            
+            // Populate Modal
+            document.getElementById('modal-menu-img').src = m.img || 'https://via.placeholder.com/150?text=Menu';
+            document.getElementById('modal-menu-name').innerText = m.nama;
+            document.getElementById('modal-menu-price').innerText = formatRp(m.harga);
+            document.getElementById('modal-menu-qty').innerText = modalQty;
+            
+            // Render Addons in Modal
+            const addonsList = document.getElementById('modal-addons-list');
+            const addonsSection = document.getElementById('modal-addons-section');
+            addonsList.innerHTML = '';
+            
+            if(m.addons && m.addons.length > 0) {
+                addonsSection.classList.remove('hidden');
+                m.addons.forEach((a, idx) => {
+                    addonsList.innerHTML += `
+                    <label class="flex items-center justify-between p-2 border rounded-lg hover:bg-red-50 cursor-pointer transition select-none">
+                        <div class="flex items-center gap-2">
+                            <input type="checkbox" class="modal-addon-checkbox w-4 h-4 text-red-600 rounded focus:ring-red-500" data-name="${a.name}" data-price="${a.price}" onchange="updateModalTotal()">
+                            <span class="text-sm text-gray-700 font-medium">${a.name}</span>
+                        </div>
+                        <span class="text-xs font-bold text-gray-500 bg-gray-100 px-2 py-1 rounded">+${formatRp(a.price)}</span>
+                    </label>`;
+                });
+            } else {
+                addonsSection.classList.add('hidden');
+            }
+            
+            updateModalTotal();
+            
+            // LOGIKA ANIMASI:
+            const modal = document.getElementById('menu-modal');
+            const content = document.getElementById('modal-content-box');
+            
+            modal.classList.remove('hidden');
+            
+            // Restart animasi CSS setiap kali dibuka
+            content.classList.remove('animate-popup-content');
+            void content.offsetWidth; // Trigger reflow
+            content.classList.add('animate-popup-content');
+        }
+
+        function closeMenuModal() {
+            document.getElementById('menu-modal').classList.add('hidden');
+        }
+
+        function adjModalQty(v) {
+            modalQty += v;
+            if(modalQty < 1) modalQty = 1;
+            document.getElementById('modal-menu-qty').innerText = modalQty;
+            updateModalTotal();
+        }
+
+        function updateModalTotal() {
+            const m = db.menu.find(x => x.id === selectedMenuId);
+            let addonTotal = 0;
+            document.querySelectorAll('.modal-addon-checkbox:checked').forEach(cb => {
+                addonTotal += parseInt(cb.dataset.price);
+            });
+            const grandTotal = (m.harga + addonTotal) * modalQty;
+            document.getElementById('modal-total-btn').innerText = formatRp(grandTotal);
+        }
+
+        function processAddToCart() {
+            const m = db.menu.find(x => x.id === selectedMenuId);
+            const selectedAddons = [];
+            
+            document.querySelectorAll('.modal-addon-checkbox:checked').forEach(cb => {
+                selectedAddons.push({name: cb.dataset.name, price: parseInt(cb.dataset.price)});
+            });
+
+            db.cart.push({
+                ...m, 
+                qty: modalQty, 
+                note: '', 
+                selectedAddons: selectedAddons 
+            });
+            
+            closeMenuModal();
+            renderCart(); 
+            showToast(`${m.nama} ditambahkan`);
             
             const badge = document.getElementById('cart-badge-count');
             badge.classList.remove('scale-0');
@@ -613,6 +665,7 @@
             setTimeout(() => badge.classList.remove('badge-pop'), 300);
         }
 
+        /* === CART LOGIC (SYNC WITH POPUP) === */
         function toggleAddon(cartIdx, addonName, addonPrice) { const item = db.cart[cartIdx]; const existingIdx = item.selectedAddons.findIndex(x => x.name === addonName); if(existingIdx > -1) { item.selectedAddons.splice(existingIdx, 1); } else { item.selectedAddons.push({name: addonName, price: addonPrice}); } renderCart(); }
         function clearCart() { if(db.cart.length > 0) { if(confirm("Hapus semua menu di keranjang?")) { db.cart = []; renderCart(); } } }
 
@@ -629,7 +682,10 @@
                 let addonsHtml = '';
                 if(i.addons && i.addons.length > 0) {
                     addonsHtml = '<div class="mt-1 flex flex-wrap gap-1">';
-                    i.addons.forEach(opt => { const isChecked = i.selectedAddons.find(x => x.name === opt.name) ? 'checked' : ''; addonsHtml += `<label class="flex items-center text-[9px] bg-gray-100 px-1.5 py-0.5 rounded cursor-pointer border border-gray-200 hover:bg-red-50 ${isChecked ? 'bg-red-50 border-red-200 text-red-600' : 'text-gray-600'}"><input type="checkbox" ${isChecked} onchange="toggleAddon(${idx}, '${opt.name}', ${opt.price})" class="hidden">${isChecked ? '<i class="fas fa-check mr-1 text-[8px]"></i>' : ''} ${opt.name} (+${opt.price/1000}k)</label>`; });
+                    i.addons.forEach(opt => { 
+                        const isChecked = i.selectedAddons.find(x => x.name === opt.name) ? 'checked' : ''; 
+                        addonsHtml += `<label class="flex items-center text-[9px] bg-gray-100 px-1.5 py-0.5 rounded cursor-pointer border border-gray-200 hover:bg-red-50 ${isChecked ? 'bg-red-50 border-red-200 text-red-600' : 'text-gray-600'}"><input type="checkbox" ${isChecked} onchange="toggleAddon(${idx}, '${opt.name}', ${opt.price})" class="hidden">${isChecked ? '<i class="fas fa-check mr-1 text-[8px]"></i>' : ''} ${opt.name} (+${opt.price/1000}k)</label>`; 
+                    });
                     addonsHtml += '</div>';
                 }
                 c.innerHTML += `<div class="bg-white p-2 rounded border border-gray-100 relative shadow-sm"><div class="flex justify-between font-bold text-xs text-gray-700 items-start"><div>${i.nama}</div><div>${formatRp(itemTotal)}</div></div><div class="text-[10px] text-gray-400 mb-1">${i.qty} x ${formatRp(unitPrice)}</div>${addonsHtml}<input type="text" placeholder="Catatan..." value="${i.note}" onchange="updateNote(${idx}, this.value)" class="w-full text-[10px] border-b border-dashed outline-none mt-1 bg-transparent text-gray-500"><div class="flex items-center gap-2 justify-end mt-2"><button onclick="modQty(${idx}, -1)" class="w-5 h-5 bg-gray-100 rounded text-xs text-gray-600 flex items-center justify-center">-</button><span class="text-xs font-bold w-4 text-center">${i.qty}</span><button onclick="modQty(${idx}, 1)" class="w-5 h-5 bg-red-50 text-red-500 rounded text-xs flex items-center justify-center">+</button></div><button onclick="delCart(${idx})" class="absolute -top-1 -right-1 bg-red-500 text-white w-4 h-4 rounded-full text-[8px] flex items-center justify-center">x</button></div>`;
@@ -880,7 +936,6 @@
             
             const kitchenHtml = db.cart.map(i => { const addons = i.selectedAddons.map(a => `<span class="addon-badge">+${a.name}</span>`).join(' '); if(i.printed) { return `<div class="item done"><div class="qty"><i class="fas fa-check"></i></div><div class="details"><div class="name">${i.nama} (${i.qty})</div>${addons}</div></div>`; } else { return `<div class="item"><div class="qty">${i.qty}</div><div class="details"><div class="name">${i.nama}</div>${addons}${i.note?`<div class="note">Note: ${i.note}</div>`:''}</div></div>`; } }).join('');
             
-            // Logic Fix: Hanya tampilkan Tunai/Kembali jika metode CASH
             let cashDetails = '';
             if(payState.method === 'cash') {
                 cashDetails = `
@@ -961,7 +1016,7 @@
                         const canvas = document.createElement('canvas');
                         const ctx = canvas.getContext('2d');
                         const MAX_WIDTH = 150; 
-                        const QUALITY = 0.5;   
+                        const QUALITY = 0.5;    
                         let width = img.width;
                         let height = img.height;
                         if (width > height) { if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; } } else { if (height > MAX_WIDTH) { width *= MAX_WIDTH / height; height = MAX_WIDTH; } }
