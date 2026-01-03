@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>POS Warkop PRO - V19.11 (Fix Sticky Header Desktop)</title>
+    <title>POS Warkop PRO - V19.14 (Fix Struk QRIS)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -24,27 +24,36 @@
             #print-area, #print-area * { visibility: visible; }
             #print-area { display: block !important; position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0; }
             
-            .print-invoice { font-family: 'Courier New', monospace; font-size: 12px; width: 58mm; color: black; padding-bottom: 20px;}
+            /* Struk Customer */
+            .print-invoice { font-family: 'Courier New', Courier, monospace; font-size: 11px; width: 58mm; color: black; padding-bottom: 20px; padding-right: 2mm;}
             .print-invoice .header { text-align: center; margin-bottom: 10px; }
-            .print-invoice .logo { width: 50px; height: 50px; object-fit: contain; margin: 0 auto; display: block; }
-            .print-invoice .shop-name { font-weight: bold; font-size: 14px; margin-top: 5px; }
+            .print-invoice .logo { width: 40px; height: 40px; object-fit: contain; margin: 0 auto; display: block; }
+            .print-invoice .shop-name { font-weight: bold; font-size: 14px; margin-top: 5px; text-transform: uppercase; }
             .print-invoice .divider { border-bottom: 1px dashed black; margin: 5px 0; }
-            .print-invoice .item-row { margin-bottom: 4px; }
-            .print-invoice .item-main { display: flex; justify-content: space-between; font-weight: bold; font-size: 12px; }
-            .print-invoice .item-addon { font-size: 10px; color: #444; margin-left: 10px; display: block; font-style: italic;}
-            .print-invoice .total-section { text-align: right; margin-top: 5px; }
-            .print-invoice .total-value { font-size: 18px; font-weight: 900; }
-            .print-invoice .payment-badge { margin-top: 10px; border: 2px solid black; padding: 5px; text-align: center; font-weight: 900; font-size: 16px; letter-spacing: 2px; text-transform: uppercase; border-radius: 5px; }
+            
+            /* Item List Rapih */
+            .print-invoice .item-row { margin-bottom: 4px; display: flex; flex-direction: column; }
+            .print-invoice .item-main { display: flex; justify-content: space-between; align-items: flex-start; font-weight: bold; }
+            .print-invoice .item-name { flex: 1; padding-right: 5px; word-wrap: break-word; } /* Nama menu fleksibel */
+            .print-invoice .item-price { white-space: nowrap; text-align: right; min-width: 60px; } /* Harga dikunci rata kanan */
+            .print-invoice .item-addon { font-size: 9px; color: #333; margin-left: 10px; font-style: italic; display: block; }
 
-            .print-dapur { font-family: Arial, sans-serif; width: 58mm; color: black; }
+            /* Total Section Rapih */
+            .print-invoice .total-section { margin-top: 5px; }
+            .print-invoice .row-summary { display: flex; justify-content: space-between; margin-bottom: 2px; }
+            .print-invoice .label { font-weight: bold; }
+            .print-invoice .val { font-weight: bold; text-align: right; }
+            .print-invoice .grand-total { font-size: 16px; font-weight: 900; }
+            
+            .print-invoice .payment-badge { margin-top: 10px; border: 2px solid black; padding: 4px; text-align: center; font-weight: 900; font-size: 14px; letter-spacing: 2px; text-transform: uppercase; border-radius: 4px; }
+
+            /* Struk Dapur */
+            .print-dapur { font-family: Arial, sans-serif; width: 58mm; color: black; padding-right: 2mm; }
             .print-dapur .header { text-align: center; font-weight: 900; font-size: 18px; border: 3px solid black; padding: 5px; margin-bottom: 10px; text-transform: uppercase; line-height: 1.2; }
             .print-dapur .meta { font-size: 12px; margin-bottom: 10px; border-bottom: 2px solid black; padding-bottom: 5px; }
             .print-dapur .item { margin-bottom: 15px; border-bottom: 1px dashed #aaa; padding-bottom: 5px; display: flex; align-items: start; }
-            .print-dapur .qty { font-size: 26px; font-weight: 900; min-width: 40px; margin-right: 5px; line-height: 1; }
+            .print-dapur .qty { font-size: 26px; font-weight: 900; min-width: 35px; margin-right: 5px; line-height: 1; }
             .print-dapur .name { font-size: 16px; font-weight: bold; line-height: 1.2; }
-            .print-dapur .item.done { opacity: 0.5; } 
-            .print-dapur .item.done .qty { font-size: 14px; font-weight: normal; }
-            .print-dapur .item.done .name { text-decoration: none; font-weight: normal; }
             .print-dapur .details { flex: 1; }
             .print-dapur .addon-badge { font-weight: bold; font-size: 12px; border: 1px solid black; padding: 1px 4px; display: inline-block; margin-top: 2px; border-radius: 4px; margin-right: 2px;}
             .print-dapur .note { font-style: italic; font-size: 12px; margin-top: 2px; color: #333; }
@@ -83,7 +92,6 @@
             }
             .cart-toggle-handle { display: none !important; }
             
-            /* FIX 19.9: Paksa tinggi besar di mobile agar tidak hilang */
             .box-menu-list {
                 height: 85vh !important; 
                 min-height: 600px;
@@ -107,7 +115,6 @@
             #drag-handle { display: none !important; } 
             #floating-cart-wrapper { display: none !important; } 
             
-            /* FIX 19.9: Di desktop biarkan full height mengikuti flex parent */
             .box-menu-list {
                 height: auto !important;
                 flex: 1;
@@ -134,10 +141,10 @@
         /* Floating Button Animations */
         #floating-cart-wrapper {
             transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s;
-            transform: translateX(-50%); 
+            transform: scale(1); 
         }
         #floating-cart-wrapper.hidden-fab {
-            transform: translateX(-50%) translateY(100px) scale(0.5);
+            transform: translateY(100px) scale(0.5);
             opacity: 0;
             pointer-events: none;
         }
@@ -217,7 +224,7 @@
                 <div id="menu-container" class="flex-1 overflow-y-auto p-3 pb-[150px] md:pb-3"></div>
             </div>
 
-            <div id="floating-cart-wrapper" class="fixed bottom-20 left-1/2 z-40 md:hidden" onclick="toggleCartMobile()">
+            <div id="floating-cart-wrapper" class="fixed bottom-20 right-4 z-40 md:hidden" onclick="toggleCartMobile()">
                 <div class="relative bg-red-600 w-14 h-14 rounded-full flex items-center justify-center text-white shadow-2xl hover:scale-105 active:scale-95 transition cursor-pointer ring-4 ring-white">
                     <i class="fas fa-shopping-basket text-xl"></i>
                     <span id="cart-badge-count" class="absolute -top-1 -right-1 bg-white text-red-600 text-[10px] font-black h-5 w-5 rounded-full flex items-center justify-center border-2 border-red-600 shadow-sm scale-0 transition-transform">0</span>
@@ -251,8 +258,8 @@
                         <div class="flex items-center gap-2">
                              <button onclick="clearCart()" class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition" title="Hapus Semua">
                                 <i class="fas fa-trash-alt text-sm"></i>
-                            </button>
-                            <span class="text-xs text-gray-500 font-medium">Total Tagihan</span>
+                             </button>
+                             <span class="text-xs text-gray-500 font-medium">Total Tagihan</span>
                         </div>
                         <span id="cart-total" class="text-2xl font-black text-gray-800">Rp 0</span>
                     </div>
@@ -404,9 +411,9 @@
                     </div>
                 </div>
                 <div class="p-4 bg-red-50 rounded-lg border border-red-100">
-                     <h3 class="font-bold text-sm mb-2 text-red-800">Zona Bahaya</h3>
-                     <button onclick="resetLaporan()" class="w-full border border-orange-300 text-orange-600 bg-white py-2 rounded text-xs font-bold hover:bg-orange-50 mb-2">Hapus Riwayat Transaksi (Menu Aman)</button>
-                     <button onclick="resetData()" class="w-full border border-red-300 text-red-500 bg-white py-2 rounded text-xs font-bold hover:bg-red-50">Reset Semua Data (Pabrik)</button>
+                      <h3 class="font-bold text-sm mb-2 text-red-800">Zona Bahaya</h3>
+                      <button onclick="resetLaporan()" class="w-full border border-orange-300 text-orange-600 bg-white py-2 rounded text-xs font-bold hover:bg-orange-50 mb-2">Hapus Riwayat Transaksi (Menu Aman)</button>
+                      <button onclick="resetData()" class="w-full border border-red-300 text-red-500 bg-white py-2 rounded text-xs font-bold hover:bg-red-50">Reset Semua Data (Pabrik)</button>
                 </div>
             </div>
         </section>
@@ -525,7 +532,6 @@
             if(pageId === 'katalog') renderKatalogTable();
             if(pageId === 'laporan') renderLaporan(); 
             
-            // Logic tambahan: Kalau pindah dari kasir, sembunyikan FAB
             const fab = document.getElementById('floating-cart-wrapper');
             if(pageId === 'kasir') {
                 fab.classList.remove('hidden');
@@ -652,11 +658,10 @@
         // --- MANAJEMEN MENU ---
         function addAddonRow(name='', price='') { const container = document.getElementById('addon-inputs-container'); const row = document.createElement('div'); row.className = "flex gap-2 items-center"; row.innerHTML = `<input type="text" placeholder="Nama (Telur)" value="${name}" class="addon-name-input w-2/3 p-1 border rounded text-xs"><input type="number" placeholder="Rp" value="${price}" class="addon-price-input w-1/3 p-1 border rounded text-xs"><button onclick="this.parentElement.remove()" class="text-red-500 text-xs"><i class="fas fa-trash"></i></button>`; container.appendChild(row); }
         
-        // --- LOGIKA SIMPAN MENU (UPDATE UNTUK FOTO KOSONG) ---
+        // --- LOGIKA SIMPAN MENU ---
         function simpanMenu() {
             const n = document.getElementById('input-nama').value; const h = parseInt(document.getElementById('input-harga').value); const k = document.getElementById('input-kategori').value; const s = document.getElementById('input-status').value; 
             let i = document.getElementById('menu-img-preview').src;
-            // Jika src adalah placeholder, simpan sebagai string kosong agar rapi di DB
             if(i.includes('via.placeholder.com')) i = "";
 
             const addonRows = document.querySelectorAll('#addon-inputs-container > div'); let addons = [];
@@ -666,10 +671,9 @@
             saveDB(); resetMenuForm(); renderKatalogTable(); renderMenu();
         }
         
-        // --- LOGIKA HAPUS FOTO SAJA ---
         function hapusFoto() {
             document.getElementById('menu-img-preview').src = 'https://via.placeholder.com/150?text=Upload+Foto';
-            document.getElementById('menu-img-input').value = ''; // Reset input file
+            document.getElementById('menu-img-input').value = ''; 
         }
 
         function editMenu(id) { const m = db.menu.find(x => x.id === id); editId = id; document.getElementById('input-nama').value = m.nama; document.getElementById('input-harga').value = m.harga; document.getElementById('input-kategori').value = m.kategori; document.getElementById('input-status').value = m.status || 'tersedia'; document.getElementById('menu-img-preview').src = m.img || 'https://via.placeholder.com/150?text=Upload+Foto'; const container = document.getElementById('addon-inputs-container'); container.innerHTML = ''; if(m.addons) { m.addons.forEach(a => addAddonRow(a.name, a.price)); } }
@@ -698,7 +702,7 @@
             initChart(tr); 
         }
 
-        // --- CHART JS LOGIC (PREMIUM & DYNAMIC) ---
+        // --- CHART JS LOGIC ---
         function updateChartFilter(days) {
             currentChartFilter = days;
             document.querySelectorAll('.chart-btn').forEach(btn => {
@@ -708,7 +712,6 @@
             const activeBtn = document.getElementById('chart-btn-'+days);
             activeBtn.classList.add('active');
             activeBtn.classList.remove('text-gray-500');
-            
             renderLaporan(); 
         }
 
@@ -828,11 +831,13 @@
 
         function printDapurForSave(custName, isAuto = false) {
             const nameInput = document.getElementById('customer-name');
-            if(!custName && !isAuto) {
+            if(currentOrderType === 'Dine In' && !custName && !isAuto) {
                 nameInput.classList.add('animate-shake', 'border-red-500', 'bg-red-50');
                 setTimeout(() => nameInput.classList.remove('animate-shake', 'border-red-500', 'bg-red-50'), 500);
-                return showToast("⚠️ Nama Pelanggan Wajib Diisi!");
+                return showToast("⚠️ Nama Pelanggan Wajib untuk Dine In!");
             }
+            if(!custName) custName = "Take Away";
+
             if(db.cart.length === 0) return showToast("Keranjang Kosong!");
 
             const date = new Date().toLocaleString();
@@ -842,13 +847,15 @@
 
         async function processPayment() {
             const nameInput = document.getElementById('customer-name');
-            const custName = nameInput.value;
-            if(!custName) {
+            let custName = nameInput.value;
+            
+            if(currentOrderType === 'Dine In' && !custName) {
                 closeModal();
                 nameInput.classList.add('animate-shake', 'border-red-500', 'bg-red-50');
                 setTimeout(() => nameInput.classList.remove('animate-shake', 'border-red-500', 'bg-red-50'), 500);
-                return showToast("⚠️ Masukkan Nama Pelanggan Dulu!");
+                return showToast("⚠️ Masukkan Nama Pelanggan (Dine In)!");
             }
+            if(!custName) custName = "Take Away";
 
             closeModal();
             const anim = document.getElementById('success-anim'); anim.classList.remove('hidden');
@@ -857,21 +864,62 @@
             if(!db.transaksi) db.transaksi = []; db.transaksi.push(trx);
             if(db.settings.sheetUrl) fetch(db.settings.sheetUrl, { method:'POST', mode:'no-cors', body:JSON.stringify(trx) });
             const logo = db.settings.logo ? `<img src="${db.settings.logo}" class="logo">` : '';
-            const itemsHtml = db.cart.map(i => { let unitPrice = i.harga + i.selectedAddons.reduce((s,a)=>s+a.price,0); const addonsHtml = i.selectedAddons.map(a => `<span class="item-addon">+ ${a.name} (${formatRp(a.price)})</span>`).join(''); return `<div class="item-row"><div class="item-main"><span>${i.nama} x${i.qty}</span><span>${formatRp(unitPrice * i.qty)}</span></div>${addonsHtml}</div>`; }).join('');
-            const kitchenHtml = db.cart.map(i => { const addons = i.selectedAddons.map(a => `<span class="addon-badge">+${a.name}</span>`).join(' '); if(i.printed) { return `<div class="item done"><div class="qty"><i class="fas fa-check"></i></div><div class="details"><div class="name">${i.nama} (${i.qty})</div>${addons}</div></div>`; } else { return `<div class="item"><div class="qty">${i.qty}</div><div class="details"><div class="name">${i.nama}</div>${addons}${i.note?`<div class="note">Note: ${i.note}</div>`:''}</div></div>`; } }).join('');
-            document.getElementById('print-area').innerHTML = `<div class="print-dapur"><div class="header">TIKET DAPUR</div><div class="meta"><div>${trx.tanggal}</div><div style="font-size:16px; font-weight:bold;">${trx.pelanggan} (${trx.tipe})</div></div>${kitchenHtml}</div><div style="page-break-before: always;"></div><div class="print-invoice"><div class="header">${logo}<h2 class="shop-name">${db.settings.shopName}</h2><p>${db.settings.address}</p><div class="divider"></div></div><div>${itemsHtml}</div><div class="divider"></div><div class="total-section"><div style="font-size:12px;">TOTAL</div><div class="total-value">${formatRp(payState.total)}</div><div class="payment-badge">LUNAS</div><div style="font-size:10px; margin-top:5px;">Metode: ${payState.method.toUpperCase()}</div></div><div class="divider"></div><center style="font-size:10px;">Terima Kasih<br>${trx.tanggal}</center></div>`;
-            window.print(); db.cart = []; document.getElementById('customer-name').value=''; renderCart(); saveDB();
             
+            const itemsHtml = db.cart.map(i => { 
+                let unitPrice = i.harga + i.selectedAddons.reduce((s,a)=>s+a.price,0); 
+                const addonsHtml = i.selectedAddons.map(a => `<span class="item-addon">+ ${a.name} (${formatRp(a.price)})</span>`).join(''); 
+                return `
+                <div class="item-row">
+                    <div class="item-main">
+                        <span class="item-name">${i.nama} x${i.qty}</span>
+                        <span class="item-price">${formatRp(unitPrice * i.qty)}</span>
+                    </div>
+                    ${addonsHtml}
+                </div>`; 
+            }).join('');
+            
+            const kitchenHtml = db.cart.map(i => { const addons = i.selectedAddons.map(a => `<span class="addon-badge">+${a.name}</span>`).join(' '); if(i.printed) { return `<div class="item done"><div class="qty"><i class="fas fa-check"></i></div><div class="details"><div class="name">${i.nama} (${i.qty})</div>${addons}</div></div>`; } else { return `<div class="item"><div class="qty">${i.qty}</div><div class="details"><div class="name">${i.nama}</div>${addons}${i.note?`<div class="note">Note: ${i.note}</div>`:''}</div></div>`; } }).join('');
+            
+            // Logic Fix: Hanya tampilkan Tunai/Kembali jika metode CASH
+            let cashDetails = '';
+            if(payState.method === 'cash') {
+                cashDetails = `
+                <div class="row-summary"><span class="label">TUNAI</span><span class="val">${formatRp(payState.received)}</span></div>
+                <div class="row-summary"><span class="label">KEMBALI</span><span class="val">${formatRp(payState.change)}</span></div>
+                `;
+            }
+
+            document.getElementById('print-area').innerHTML = `
+            <div class="print-dapur">
+                <div class="header">TIKET DAPUR</div>
+                <div class="meta"><div>${trx.tanggal}</div><div style="font-size:16px; font-weight:bold;">${trx.pelanggan} (${trx.tipe})</div></div>
+                ${kitchenHtml}
+            </div>
+            <div style="page-break-before: always;"></div>
+            <div class="print-invoice">
+                <div class="header">${logo}<h2 class="shop-name">${db.settings.shopName}</h2><p>${db.settings.address}</p><div class="divider"></div></div>
+                <div>${itemsHtml}</div>
+                <div class="divider"></div>
+                <div class="total-section">
+                    <div class="row-summary"><span class="label">TOTAL</span><span class="val grand-total">${formatRp(payState.total)}</span></div>
+                    ${cashDetails}
+                    <div class="payment-badge">LUNAS</div>
+                    <div style="font-size:10px; margin-top:5px; text-align:right;">Metode: ${payState.method.toUpperCase()}</div>
+                </div>
+                <div class="divider"></div>
+                <center style="font-size:10px;">Terima Kasih<br>${trx.tanggal}</center>
+            </div>`;
+            window.print(); db.cart = []; document.getElementById('customer-name').value=''; renderCart(); saveDB();
             if(window.innerWidth < 768) toggleCartMobile(false);
         }
 
         function openPaymentModal() { 
             if(db.cart.length===0) return showToast("Keranjang Kosong!"); 
             const nameInput = document.getElementById('customer-name');
-            if(!nameInput.value) {
+            if(currentOrderType === 'Dine In' && !nameInput.value) {
                  nameInput.classList.add('animate-shake', 'border-red-500', 'bg-red-50');
                  setTimeout(() => nameInput.classList.remove('animate-shake', 'border-red-500', 'bg-red-50'), 500);
-                 return showToast("⚠️ Isi Nama Pelanggan Dulu!");
+                 return showToast("⚠️ Isi Nama Pelanggan (Dine In)!");
             }
             document.getElementById('payment-modal').classList.remove('hidden'); setPaymentMethod('cash'); payState.total = db.cart.reduce((t,i)=> t + (i.harga + i.selectedAddons.reduce((s,a)=>s+a.price,0))*i.qty, 0); document.getElementById('modal-total-display').innerText = formatRp(payState.total); document.getElementById('qris-amount-display').innerText = formatRp(payState.total); updateCalc(); 
         }
@@ -884,17 +932,16 @@
         function updateCalc() { document.getElementById('cash-received-display').innerText = payState.received.toLocaleString(); payState.change = payState.received - payState.total; const el = document.getElementById('change-display'); if(payState.change < 0) { el.innerText = "Kurang " + Math.abs(payState.change); el.className="font-bold text-xl text-red-500"; document.getElementById('btn-finish-pay').disabled=true; } else { el.innerText = formatRp(payState.change); el.className="font-bold text-xl text-green-600"; document.getElementById('btn-finish-pay').disabled=false; } }
         
         function saveOpenBill() { 
-            const nm = document.getElementById('customer-name').value; 
-            if(!nm) {
+            let nm = document.getElementById('customer-name').value; 
+            if(currentOrderType === 'Dine In' && !nm) {
                 const nameInput = document.getElementById('customer-name');
                 nameInput.classList.add('animate-shake', 'border-red-500', 'bg-red-50');
                 setTimeout(() => nameInput.classList.remove('animate-shake', 'border-red-500', 'bg-red-50'), 500);
-                return showToast("⚠️ Isi Nama Pelanggan Dulu!");
+                return showToast("⚠️ Isi Nama Pelanggan (Dine In)!");
             }
             if(db.cart.length===0) return showToast("Cart Kosong!"); 
-            
+            if(!nm) nm = "Take Away";
             printDapurForSave(nm, true); 
-            
             db.cart.forEach(item => { item.printed = true; }); db.openBills.push({ id: Date.now(), nama: nm, cart: [...db.cart], type: currentOrderType, time: new Date().toLocaleString() }); db.cart = []; document.getElementById('customer-name').value = ''; renderCart(); 
             if(window.innerWidth < 768) toggleCartMobile(false);
         }
@@ -903,31 +950,24 @@
         function restoreBill(i) { const b = db.openBills[i]; db.cart = b.cart; document.getElementById('customer-name').value = b.nama; currentOrderType = b.type; setOrderType(b.type); db.openBills.splice(i, 1); saveDB(); nav('kasir'); renderCart(); if(window.innerWidth < 768) toggleCartMobile(true); }
         function hapusBill(i) { if(confirm("Hapus?")) { db.openBills.splice(i, 1); saveDB(); renderOpenBills(); } }
 
-        /* === FUNGSI KOMPRES GAMBAR OTOMATIS (AGAR APP RINGAN ~10KB) === */
+        /* === FUNGSI KOMPRES GAMBAR OTOMATIS === */
         function previewMenuImg(input) {
             if (input.files && input.files[0]) {
                 const file = input.files[0];
                 const reader = new FileReader();
-                
                 reader.onload = function(event) {
                     const img = new Image();
                     img.onload = function() {
                         const canvas = document.createElement('canvas');
                         const ctx = canvas.getContext('2d');
-                        
-                        // SETTING KOMPRESI EKSTREM
-                        const MAX_WIDTH = 150; // Lebar maks 150px (kecil tapi cukup untuk icon)
-                        const QUALITY = 0.5;   // Kualitas 50%
-                        
+                        const MAX_WIDTH = 150; 
+                        const QUALITY = 0.5;   
                         let width = img.width;
                         let height = img.height;
                         if (width > height) { if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; } } else { if (height > MAX_WIDTH) { width *= MAX_WIDTH / height; height = MAX_WIDTH; } }
-                        
                         canvas.width = width;
                         canvas.height = height;
                         ctx.drawImage(img, 0, 0, width, height);
-                        
-                        // Output JPEG Low Quality
                         const dataUrl = canvas.toDataURL('image/jpeg', QUALITY);
                         document.getElementById('menu-img-preview').src = dataUrl;
                     };
@@ -947,30 +987,15 @@
         function resetLaporan() { if(confirm("Yakin hapus SEMUA riwayat transaksi sisa tes tadi? (Menu & Settingan Toko TETAP AMAN)")) { if(confirm("Serius? Data laporan akan jadi 0!")) { db.transaksi = []; saveDB(); alert("Laporan Penjualan sudah 0 kembali. Siap Opening!"); location.reload(); } } }
         function resetData() { if(confirm("AWAS! Ini akan menghapus SEMUA DATA (Menu, Setting, Laporan). Yakin?")) { localStorage.clear(); location.reload(); } }
 
-        /* === LOGIKA BARU: FLOATING BUTTON + PANEL ANIMATION === */
-        
+        /* === FLOATING BUTTON & PANEL ANIMATION === */
         let isCartOpen = false;
-
         function toggleCartMobile(forceState = null) {
             const sheet = document.getElementById('cart-panel');
             const fabWrapper = document.getElementById('floating-cart-wrapper');
             const isMobile = window.innerWidth < 768;
-
             if (!isMobile) return;
-
-            if (forceState !== null) {
-                isCartOpen = forceState;
-            } else {
-                isCartOpen = !isCartOpen;
-            }
-
-            if (isCartOpen) {
-                sheet.style.transform = `translateY(0)`;
-                fabWrapper.classList.add('hidden-fab');
-            } else {
-                sheet.style.transform = `translateY(110%)`; 
-                fabWrapper.classList.remove('hidden-fab');
-            }
+            if (forceState !== null) { isCartOpen = forceState; } else { isCartOpen = !isCartOpen; }
+            if (isCartOpen) { sheet.style.transform = `translateY(0)`; fabWrapper.classList.add('hidden-fab'); } else { sheet.style.transform = `translateY(110%)`; fabWrapper.classList.remove('hidden-fab'); }
         }
 
         (function() {
@@ -978,33 +1003,26 @@
             const dragHandle = document.getElementById('drag-handle');
             let startY, currentY, initialSheetY;
             let isDragging = false;
-            
             const isMobile = () => window.innerWidth < 768;
-            
             const getEventY = (e) => e.touches ? e.touches[0].clientY : e.clientY;
 
             const startDrag = (e) => {
                 if (!isMobile()) return;
                 isDragging = true;
                 startY = getEventY(e);
-                
                 const style = window.getComputedStyle(sheet);
                 const matrix = new WebKitCSSMatrix(style.transform);
                 initialSheetY = matrix.m42; 
-                
                 sheet.classList.add('is-dragging');
             };
 
             const onDrag = (e) => {
                 if (!isDragging || !isMobile()) return;
                 if(e.cancelable) e.preventDefault(); 
-                
                 const currentTouchY = getEventY(e);
                 const deltaY = currentTouchY - startY;
-                
                 let newY = initialSheetY + deltaY;
                 if (newY < 0) newY = 0; 
-                
                 sheet.style.transform = `translateY(${newY}px)`;
                 currentY = newY;
             };
@@ -1013,19 +1031,13 @@
                 if (!isDragging || !isMobile()) return;
                 isDragging = false;
                 sheet.classList.remove('is-dragging');
-                
-                if (currentY > 150) {
-                    toggleCartMobile(false); 
-                } else {
-                    toggleCartMobile(true); 
-                }
+                if (currentY > 150) { toggleCartMobile(false); } else { toggleCartMobile(true); }
             };
 
             if(dragHandle && sheet) {
                 dragHandle.addEventListener('touchstart', startDrag, {passive: false});
                 document.addEventListener('touchmove', onDrag, {passive: false});
                 document.addEventListener('touchend', endDrag);
-                
                 dragHandle.addEventListener('mousedown', startDrag);
                 document.addEventListener('mousemove', onDrag);
                 document.addEventListener('mouseup', endDrag);
