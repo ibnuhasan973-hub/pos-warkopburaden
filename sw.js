@@ -1,77 +1,84 @@
-const CACHE_NAME = 'pos-warkop-v4-debug'; 
+const CACHE_NAME = 'pos-warkop-v5-icons-fix';
 
-// Daftar file prioritas
+// Daftar file UTAMA yang wajib ada (File lokal)
 const urlsToCache = [
-  './', 
+  './',
   './index.html',
-  './style.css', 
-  './script.js' 
-  // Link CDN kita hapus dulu dari "Wajib Cache" agar tidak bikin error saat install
+  './style.css',
+  './script.js',
+  './manifest.json'
+  // Icon gambar lokal jika ada, masukkan disini:
+  // './images/logo.png' 
 ];
 
-// 1. Install Service Worker (Versi Kebal Error)
+// 1. Install Service Worker
 self.addEventListener('install', (event) => {
-  console.log('SW: Mencoba menginstall...');
+  console.log('SW: Installing...');
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      // Kita coba tambahkan satu per satu agar ketahuan mana yang error di console
-      // dan tidak membatalkan seluruh proses
       return Promise.all(
         urlsToCache.map((url) => {
           return cache.add(url).catch((err) => {
-            console.error('SW: Gagal cache file ini:', url, err);
+            console.log('SW: Gagal cache file lokal (mungkin belum ada):', url);
           });
         })
       );
     })
   );
-  // Paksa SW baru untuk segera aktif
   self.skipWaiting();
 });
 
-// 2. Activate & Hapus Cache Lama
+// 2. Activate & Bersihkan Cache Lama
 self.addEventListener('activate', (event) => {
-  console.log('SW: Aktif!');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
           if (cacheName !== CACHE_NAME) {
-            console.log('SW: Menghapus cache lama:', cacheName);
+            console.log('SW: Hapus cache lama', cacheName);
             return caches.delete(cacheName);
           }
         })
       );
     })
   );
-  // Agar SW langsung mengontrol halaman tanpa perlu refresh 2x
   self.clients.claim();
 });
 
-// 3. Fetch (Strategi: Cache First, Network Fallback)
+// 3. Fetch (Logika Pintar: Cache First + Simpan CDN/External)
 self.addEventListener('fetch', (event) => {
+  
+  // Abaikan request selain GET (misal POST ke Google Sheet)
+  if (event.request.method !== 'GET') return;
+
   event.respondWith(
-    caches.match(event.request).then((response) => {
-      // Kalau ada di cache, berikan
-      if (response) {
-        return response;
+    caches.match(event.request).then((cachedResponse) => {
+      // A. Kalau ada di cache, pakai itu.
+      if (cachedResponse) {
+        return cachedResponse;
       }
-      
-      // Kalau tidak ada di cache, ambil dari internet
+
+      // B. Kalau tidak ada, ambil dari internet
       return fetch(event.request).then((networkResponse) => {
-          // Opsional: Simpan file yang baru diambil dari internet ke cache secara otomatis
-          // agar kunjungan berikutnya bisa offline
-          return caches.open(CACHE_NAME).then((cache) => {
-             // Cek validitas response sebelum simpan
-             if(!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
-                 return networkResponse;
-             }
-             cache.put(event.request, networkResponse.clone());
-             return networkResponse;
-          });
+        // Cek apakah download berhasil
+        if (!networkResponse || networkResponse.status !== 200) {
+          return networkResponse;
+        }
+
+        // --- BAGIAN PENTING UNTUK ICON HILANG ---
+        // Kita simpan file tersebut ke cache, TERMASUK file dari CDN (Tailwind/FontAwesome)
+        // Clone response karena response stream hanya bisa dibaca sekali
+        const responseToCache = networkResponse.clone();
+
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(event.request, responseToCache);
+        });
+
+        return networkResponse;
       }).catch(() => {
-          // Kalau internet mati dan tidak ada di cache
-          console.log('SW: Offline dan file tidak ada di cache:', event.request.url);
+        // C. Kalau internet mati dan tidak ada di cache
+        console.log('SW: Offline dan file tidak ditemukan:', event.request.url);
+        // Opsional: Bisa return halaman offline khusus di sini
       });
     })
   );
