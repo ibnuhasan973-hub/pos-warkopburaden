@@ -593,7 +593,50 @@ function handleLogoUpload(input) { if (input.files && input.files[0]) { var read
 function handleQrisUpload(input) { if (input.files && input.files[0]) { var reader = new FileReader(); reader.onload = function (e) { db.settings.qris = e.target.result; document.getElementById('setting-qris-preview').src = e.target.result; saveDB(); }; reader.readAsDataURL(input.files[0]); } }
 function downloadExcel() { let csv = "ID_Transaksi,Waktu,Pelanggan,Tipe,Metode_Bayar,Kategori_Menu,Nama_Menu,Harga_Satuan,Qty,Addons,Subtotal_Item\n"; db.transaksi.forEach(t => { const items = t.itemsDetail || []; if(items.length > 0) { items.forEach(item => { const addonTotal = item.selectedAddons.reduce((s,a)=>s+a.price,0); const unitPrice = item.harga + addonTotal; const subtotal = unitPrice * item.qty; const addonsStr = item.selectedAddons.map(a=>a.name).join(' + '); const safeName = item.nama.replace(/,/g, ' '); const safeCat = item.kategori.replace(/,/g, ' '); const safeAddons = addonsStr.replace(/,/g, ' '); csv += `${t.id},"${t.tanggal}","${t.pelanggan}",${t.tipe},${t.method},${safeCat},${safeName},${unitPrice},${item.qty},"${safeAddons}",${subtotal}\n`; }); } else { csv += `${t.id},"${t.tanggal}","${t.pelanggan}",${t.tipe},${t.method},MULTIPLE_ITEMS,"(Data Lama)",0,0,"-",${t.total}\n`; } }); const link = document.createElement("a"); link.href = "data:text/csv;charset=utf-8," + encodeURI(csv); link.download = "Laporan_POS_Detail.csv"; link.click(); }
 function backupData() { const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(db)); const downloadAnchorNode = document.createElement('a'); downloadAnchorNode.setAttribute("href", dataStr); downloadAnchorNode.setAttribute("download", "database_warkop.json"); document.body.appendChild(downloadAnchorNode); downloadAnchorNode.click(); downloadAnchorNode.remove(); }
-function restoreData() { const input = document.getElementById('restore-file-input'); if (!input.files[0]) return alert("Pilih file dulu!"); const file = input.files[0]; const reader = new FileReader(); reader.onload = function(e) { try { const data = JSON.parse(e.target.result); if(confirm("Yakin mau restore? Data saat ini akan tertimpa!")) { db = data; saveDB(); alert("Berhasil Restore! Halaman akan dimuat ulang."); location.reload(); } } catch(err) { alert("File rusak atau bukan database yang benar!"); } }; reader.readAsText(file); }
+function restoreData() { 
+    const input = document.getElementById('restore-file-input'); 
+    
+    // Validasi file
+    if (!input.files[0]) return alert("Pilih file dulu!"); 
+    
+    const file = input.files[0]; 
+    const reader = new FileReader(); 
+    
+    reader.onload = function(e) { 
+        try { 
+            const data = JSON.parse(e.target.result); 
+            
+            if(confirm("Yakin mau restore? Data saat ini akan tertimpa!")) { 
+                // 1. Timpa database dengan data dari file JSON
+                db = data; 
+                saveDB(); 
+                
+                // 2. JANGAN RELOAD HALAMAN (location.reload dihapus)
+                // Kita panggil ulang fungsi-fungsi render agar tampilan berubah instan
+                applySettings();       // Update logo/nama toko
+                renderMenu();          // Update daftar menu
+                renderKatalogTable();  // Update tabel edit menu
+                renderCart();          // Update keranjang (jika ada sisa)
+                renderOpenBills();     // Update bill tersimpan
+                renderLaporan();       // Update laporan
+                
+                // 3. Reset input file biar bersih
+                input.value = '';
+                
+                // 4. Beri kabar sukses
+                alert("Berhasil Restore! Data sudah diperbarui tanpa reload."); 
+                
+                // Opsional: Pindah ke halaman kasir otomatis biar langsung kelihatan
+                nav('kasir');
+            } 
+        } catch(err) { 
+            console.error(err);
+            alert("File rusak atau bukan database yang benar!"); 
+        } 
+    }; 
+    
+    reader.readAsText(file); 
+}
 function resetLaporan() { if(confirm("Yakin hapus SEMUA riwayat transaksi sisa tes tadi? (Menu & Settingan Toko TETAP AMAN)")) { if(confirm("Serius? Data laporan akan jadi 0!")) { db.transaksi = []; saveDB(); alert("Laporan Penjualan sudah 0 kembali. Siap Opening!"); location.reload(); } } }
 function resetData() { if(confirm("AWAS! Ini akan menghapus SEMUA DATA (Menu, Setting, Laporan). Yakin?")) { localStorage.clear(); location.reload(); } }
 
@@ -652,4 +695,5 @@ function toggleCartMobile(forceState = null) {
         document.addEventListener('mousemove', onDrag);
         document.addEventListener('mouseup', endDrag);
     }
+
 })();
