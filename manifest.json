@@ -8,14 +8,15 @@
   "description": "Aplikasi Kasir Warkop Offline",
   "icons": [
     {
-      "src": "./images/logo.png",
+      "src": "./warkop.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "./images/logo.png",
+      "src": "./logo.png",
       "sizes": "512x512",
       "type": "image/png"
     }
   ]
 }
+
