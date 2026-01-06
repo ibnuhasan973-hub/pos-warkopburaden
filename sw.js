@@ -8,7 +8,7 @@ const urlsToCache = [
   './script.js',
   './manifest.json'
   // Icon gambar lokal jika ada, masukkan disini:
-  // './images/logo.png' 
+  // './warkop.png' 
 ];
 
 // 1. Install Service Worker
@@ -83,3 +83,4 @@ self.addEventListener('fetch', (event) => {
     })
   );
 });
+
