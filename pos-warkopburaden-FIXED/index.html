@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#ef4444">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>POS Warkop PRO - Offline Ready</title>
+    <link rel="apple-touch-icon" href="warkop.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-100 font-sans h-screen flex flex-col md:flex-row overflow-hidden text-gray-800">
+
+    <aside class="hidden md:flex w-20 bg-white shadow-lg flex-col items-center py-4 space-y-6 z-20 h-full shrink-0">
+        <div class="h-14 w-14 rounded-full overflow-hidden border-2 border-red-500 bg-white flex items-center justify-center">
+            <img id="sidebar-logo" src="https://via.placeholder.com/150?text=LOGO" class="w-full h-full object-contain">
+        </div>
+        <nav class="flex flex-col space-y-2 w-full text-center px-2">
+            <button onclick="nav('kasir')" id="nav-kasir" class="nav-btn active-nav p-2 text-red-500 hover:bg-red-50 rounded-lg transition"><i class="fas fa-cash-register text-xl"></i><div class="text-[10px]">Kasir</div></button>
+            <button onclick="nav('open-bill')" id="nav-open-bill" class="nav-btn p-2 text-gray-400 hover:bg-gray-50 rounded-lg transition"><i class="fas fa-receipt text-xl"></i><div class="text-[10px]">Bills</div></button>
+            <button onclick="nav('katalog')" id="nav-katalog" class="nav-btn p-2 text-gray-400 hover:bg-gray-50 rounded-lg transition"><i class="fas fa-box text-xl"></i><div class="text-[10px]">Menu</div></button>
+            <button onclick="nav('laporan')" id="nav-laporan" class="nav-btn p-2 text-gray-400 hover:bg-gray-50 rounded-lg transition"><i class="fas fa-chart-bar text-xl"></i><div class="text-[10px]">Lapor</div></button>
+            <button onclick="nav('setting')" id="nav-setting" class="nav-btn p-2 text-gray-400 hover:bg-gray-50 rounded-lg transition"><i class="fas fa-cog text-xl"></i><div class="text-[10px]">Set</div></button>
+        </nav>
+    </aside>
+
+    <main class="flex-1 flex overflow-hidden relative pb-[60px] md:pb-0 h-full">
+        <section id="page-kasir" class="page-section w-full h-full flex flex-col md:flex-row">
+            <div class="flex-1 flex flex-col bg-gray-50 h-full overflow-hidden order-1">
+                <div class="p-3 bg-white shadow-sm z-10 flex gap-3 items-center shrink-0">
+                    <div class="md:hidden h-8 w-8 rounded-full overflow-hidden border border-red-500"><img id="mobile-logo" src="https://via.placeholder.com/150?text=LOGO" class="w-full h-full object-contain"></div>
+                    <div class="flex-1 relative">
+                        <i class="fas fa-search absolute left-3 top-2.5 text-gray-400 text-sm"></i>
+                        <input type="text" id="search" placeholder="Cari..." class="bg-gray-100 pl-9 pr-8 py-2 rounded-full text-sm w-full focus:outline-none focus:ring-1 focus:ring-red-400" onkeyup="renderMenu()">
+                        <button id="clear-search-btn" onclick="clearSearch()" class="absolute right-2 top-1.5 text-gray-400 hover:text-red-500 hidden p-1">
+                            <i class="fas fa-times-circle"></i>
+                        </button>
+                    </div>
+                    <div class="flex bg-gray-100 rounded-lg p-0.5 shrink-0 items-center">
+                        <button onclick="toggleSortAZ()" id="btn-sort-az" class="p-2 rounded text-gray-500 hover:text-red-500 mr-1" title="Urutkan A-Z">
+                             <i class="fas fa-sort-alpha-down"></i>
+                        </button>
+                        <div class="w-[1px] h-6 bg-gray-300 mx-1"></div>
+                        <button onclick="setViewMode('grid')" id="btn-view-grid" class="p-2 rounded text-gray-500 hover:text-red-500"><i class="fas fa-th-large"></i></button>
+                        <button onclick="setViewMode('list')" id="btn-view-list" class="p-2 rounded text-gray-500 hover:text-red-500"><i class="fas fa-list"></i></button>
+                    </div>
+                </div>
+                <div class="px-3 pt-2 flex gap-2 overflow-x-auto pb-2 scrollbar-hide shrink-0">
+                    <button onclick="filterMenu('all')" id="cat-all" class="filter-btn active-filter whitespace-nowrap px-4 py-1.5 bg-white border rounded-full text-xs font-bold shadow-sm">Semua</button>
+                    <button onclick="filterMenu('makanan')" id="cat-makanan" class="filter-btn whitespace-nowrap px-4 py-1.5 bg-white border rounded-full text-xs font-bold shadow-sm">Makanan</button>
+                    <button onclick="filterMenu('minuman')" id="cat-minuman" class="filter-btn whitespace-nowrap px-4 py-1.5 bg-white border rounded-full text-xs font-bold shadow-sm">Minuman</button>
+                    <button onclick="filterMenu('snack')" id="cat-snack" class="filter-btn whitespace-nowrap px-4 py-1.5 bg-white border rounded-full text-xs font-bold shadow-sm">Snack</button>
+                </div>
+                <div id="menu-container" class="flex-1 overflow-y-auto p-3 pb-[150px] md:pb-3"></div>
+            </div>
+
+            <div id="floating-cart-wrapper" class="fixed bottom-20 right-4 z-40 md:hidden" onclick="toggleCartMobile()">
+                <div class="relative bg-red-600 w-14 h-14 rounded-full flex items-center justify-center text-white shadow-2xl hover:scale-105 active:scale-95 transition cursor-pointer ring-4 ring-white">
+                    <i class="fas fa-shopping-basket text-xl"></i>
+                    <span id="cart-badge-count" class="absolute -top-1 -right-1 bg-white text-red-600 text-[10px] font-black h-5 w-5 rounded-full flex items-center justify-center border-2 border-red-600 shadow-sm scale-0 transition-transform">0</span>
+                </div>
+            </div>
+
+            <div id="cart-panel" class="mobile-cart-container bg-white md:shadow-xl flex flex-col z-50 h-full max-h-screen">
+                <div id="drag-handle" class="sheet-handle-area hover:bg-gray-100 active:bg-gray-200 active:scale-95 transition-all duration-200 ease-in-out shrink-0 cursor-pointer" onclick="toggleCartMobile(false)">
+                    <div class="w-12 h-1.5 bg-gray-300 rounded-full pointer-events-none"></div>
+                </div>
+
+                <div id="cart-header" class="px-4 py-2 border-b bg-white shrink-0 relative flex flex-col gap-2">
+                    <div class="flex p-1 bg-gray-100 rounded-lg">
+                        <button onclick="setOrderType('Dine In')" id="btn-dine" class="flex-1 py-1.5 text-xs font-bold bg-blue-600 text-white shadow-md rounded-lg transition">
+                            <i class="fas fa-utensils mr-1"></i> Dine In
+                        </button>
+                        <button onclick="setOrderType('Take Away')" id="btn-take" class="flex-1 py-1.5 text-xs font-bold bg-gray-100 text-gray-400 rounded-lg transition">
+                            <i class="fas fa-shopping-bag mr-1"></i> Take Away
+                        </button>
+                    </div>
+                    <div class="relative">
+                        <input id="customer-name" type="text" placeholder="Masukkan Nama Pelanggan..." class="w-full bg-yellow-50 border border-yellow-200 focus:border-yellow-500 focus:bg-white text-gray-800 rounded-lg px-3 py-2 text-sm outline-none transition-all placeholder:text-gray-400 font-medium">
+                        <i class="fas fa-user absolute right-3 top-2.5 text-yellow-400 text-xs"></i>
+                    </div>
+                </div>
+                
+                <div id="cart-items" class="flex-1 overflow-y-auto p-3 space-y-2 bg-gray-50 min-h-0"></div>
+                
+                <div class="p-4 bg-white border-t shrink-0 relative z-50 shadow-[0_-5px_15px_rgba(0,0,0,0.05)] pb-[calc(70px+env(safe-area-inset-bottom))] md:pb-4">
+                    <div class="flex justify-between items-center mb-2">
+                        <div class="flex items-center gap-2">
+                             <button onclick="clearCart()" class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition" title="Hapus Semua">
+                                <i class="fas fa-trash-alt text-sm"></i>
+                             </button>
+                             <span class="text-xs text-gray-500 font-medium">Total Tagihan</span>
+                        </div>
+                        <span id="cart-total" class="text-2xl font-black text-gray-800">Rp 0</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 mb-2">
+                        <button onclick="saveOpenBill()" class="py-3 bg-blue-50 text-blue-700 rounded-xl font-bold text-xs border border-blue-200 shadow-sm active:scale-95 transition flex items-center justify-center gap-1">
+                            <i class="fas fa-save"></i> Simpan
+                        </button>
+                        <button onclick="openPaymentModal()" class="py-3 bg-green-600 text-white rounded-xl font-bold text-xs shadow-md active:scale-95 transition flex items-center justify-center gap-1 hover:bg-green-700">
+                            <i class="fas fa-money-bill-wave"></i> BAYAR
+                        </button>
+                    </div>
+                    <button onclick="printDapurForSave(document.getElementById('customer-name').value, false)" class="w-full py-4 bg-orange-100 border border-orange-200 text-orange-700 rounded-lg text-sm hover:bg-orange-200 active:scale-95 transition font-extrabold flex items-center justify-center gap-2">
+                        <i class="fas fa-fire text-orange-600"></i> CETAK STRUK DAPUR
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section id="page-open-bill" class="page-section hidden w-full h-full p-4 md:p-6 overflow-y-auto bg-gray-50">
+            <h2 class="text-xl font-bold mb-4 text-gray-800">Daftar Open Bill</h2>
+            <div id="bill-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 pb-48"></div>
+        </section>
+
+        <section id="page-katalog" class="page-section hidden w-full h-full p-4 md:p-6 overflow-y-auto bg-gray-50">
+            <div class="flex flex-col md:flex-row gap-6 h-full pb-48">
+                <div class="w-full md:w-1/3 bg-white p-4 rounded-xl shadow h-fit overflow-y-auto shrink-0">
+                    <h3 class="font-bold text-lg mb-4 border-b pb-2">Input Menu</h3>
+                    <input type="hidden" id="menu-edit-id">
+                    <div class="mb-4 text-center relative">
+                        <button onclick="hapusFoto()" type="button" class="absolute -right-2 -top-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center shadow-md hover:bg-red-600 z-10 border-2 border-white transition transform active:scale-90" title="Hapus Foto">
+                            <i class="fas fa-times"></i>
+                        </button>
+                        <label for="menu-img-input" class="cursor-pointer block relative group">
+                            <img id="menu-img-preview" src="https://via.placeholder.com/150?text=Upload+Foto" class="w-full h-32 object-cover rounded bg-gray-100 border-2 border-dashed border-gray-300">
+                            <div class="absolute inset-0 bg-black/50 hidden group-hover:flex items-center justify-center text-white text-xs rounded">Ganti</div>
+                        </label>
+                        <input type="file" id="menu-img-input" class="hidden" accept="image/*" onchange="previewMenuImg(this)">
+                    </div>
+                    <div class="space-y-3">
+                        <input type="text" id="input-nama" class="w-full p-2 border rounded text-sm" placeholder="Nama Menu">
+                        <input type="number" id="input-harga" class="w-full p-2 border rounded text-sm" placeholder="Harga">
+                        <div class="flex gap-2">
+                             <select id="input-kategori" class="w-2/3 p-2 border rounded text-sm bg-white">
+                                <option value="makanan">Makanan</option>
+                                <option value="minuman">Minuman</option>
+                                <option value="snack">Snack</option>
+                            </select>
+                            <select id="input-status" class="w-1/3 p-2 border rounded text-sm bg-white font-bold text-gray-600">
+                                <option value="tersedia">Ada</option>
+                                <option value="habis">Habis</option>
+                            </select>
+                        </div>
+                        <div class="bg-gray-50 p-2 rounded border border-gray-200">
+                            <label class="block text-xs font-bold mb-1 text-gray-600">Daftar Add-ons</label>
+                            <div id="addon-inputs-container" class="space-y-2 mb-2"></div>
+                            <button onclick="addAddonRow()" class="w-full text-xs bg-white text-blue-600 px-2 py-1.5 rounded border border-blue-200 hover:bg-blue-50">+ Tambah Baris Addon</button>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="simpanMenu()" class="flex-1 bg-green-500 text-white py-2 rounded font-bold hover:bg-green-600">Simpan</button>
+                            <button onclick="resetMenuForm()" class="w-20 bg-gray-200 text-gray-600 py-2 rounded font-bold hover:bg-gray-300">Reset</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="w-full md:w-2/3 bg-white rounded-xl shadow overflow-hidden flex flex-col box-menu-list mt-4 md:mt-0">
+                    <div class="p-3 bg-gray-100 border-b font-bold text-sm shrink-0">Daftar Menu</div>
+                    <div class="flex-1 overflow-y-auto p-0 h-full">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-gray-50 text-gray-500 border-b sticky top-0 shadow-sm z-10">
+                                <tr>
+                                    <th class="p-3">Menu</th>
+                                    <th class="p-3 text-right">Harga</th>
+                                    <th class="p-3 text-center">Sts</th>
+                                    <th class="p-3 text-center">Aksi</th>
+                                    <th class="p-3 text-center">Urut</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-katalog-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="page-laporan" class="page-section hidden w-full h-full p-4 md:p-6 overflow-y-auto bg-gray-50">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-2">
+                <h2 class="text-xl font-bold text-gray-800">Laporan Penjualan</h2>
+                <div class="flex gap-2 w-full md:w-auto">
+                    <input type="date" id="filter-date" class="border p-2 rounded text-sm" onchange="renderLaporan()">
+                    <button onclick="downloadExcel()" class="bg-green-600 text-white px-4 py-2 rounded shadow text-sm flex-1 md:flex-none whitespace-nowrap"><i class="fas fa-file-excel mr-2"></i> Excel</button>
+                </div>
+            </div>
+            <div class="bg-white p-5 rounded-2xl shadow-lg mb-6 border border-gray-100">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-gray-800"><i class="fas fa-chart-line mr-2 text-blue-500"></i>Analitik Omset</h3>
+                </div>
+                <div class="flex bg-gray-100 p-1 rounded-lg w-fit mb-4">
+                    <button onclick="updateChartFilter('7')" id="chart-btn-7" class="chart-btn active px-4 py-1.5 text-xs font-bold rounded-md">7 Hari</button>
+                    <button onclick="updateChartFilter('30')" id="chart-btn-30" class="chart-btn px-4 py-1.5 text-xs font-bold rounded-md text-gray-500 hover:text-gray-700">30 Hari</button>
+                    <button onclick="updateChartFilter('365')" id="chart-btn-365" class="chart-btn px-4 py-1.5 text-xs font-bold rounded-md text-gray-500 hover:text-gray-700">1 Tahun</button>
+                </div>
+                <div class="h-64 w-full relative">
+                    <canvas id="salesChart"></canvas>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
+                <div class="bg-white p-3 rounded-xl shadow border-l-4 border-blue-500"><div class="text-gray-500 text-[10px]">Total Omset</div><div class="text-lg md:text-2xl font-bold text-blue-600" id="lap-omset">Rp 0</div></div>
+                <div class="bg-white p-3 rounded-xl shadow border-l-4 border-green-500"><div class="text-gray-500 text-[10px]">Transaksi</div><div class="text-lg md:text-2xl font-bold" id="lap-transaksi">0</div></div>
+            </div>
+            <div class="bg-white rounded-xl shadow overflow-hidden pb-48">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left"><thead class="bg-gray-100 text-gray-600"><tr><th class="p-3">Waktu</th><th class="p-3">Cust</th><th class="p-3 text-right">Total</th></tr></thead><tbody id="table-laporan-body"></tbody></table>
+                </div>
+            </div>
+        </section>
+
+        <section id="page-setting" class="page-section hidden w-full h-full p-4 md:p-8 overflow-y-auto bg-white">
+            <h2 class="text-xl font-bold mb-6">Pengaturan</h2>
+            <div class="max-w-lg space-y-4 pb-48">
+                <div class="p-4 bg-gray-50 rounded-lg border">
+                    <h3 class="font-bold text-sm mb-3 text-gray-700">Identitas Toko</h3>
+                    <div class="flex items-center gap-4 border p-3 rounded-lg bg-white mb-3">
+                        <div class="w-16 h-16 bg-gray-100 border rounded flex items-center justify-center overflow-hidden shrink-0"><img id="setting-logo-preview" src="https://via.placeholder.com/150" class="w-full h-full object-contain"></div>
+                        <div class="flex-1 overflow-hidden"><label class="block text-xs font-bold mb-1">Upload Logo</label><input type="file" accept="image/*" onchange="handleLogoUpload(this)" class="text-xs text-gray-500 w-full"></div>
+                    </div>
+                    <div class="flex items-center gap-4 border p-3 rounded-lg bg-white mb-3">
+                        <div class="w-16 h-16 bg-gray-100 border rounded flex items-center justify-center overflow-hidden shrink-0"><img id="setting-qris-preview" src="https://via.placeholder.com/150?text=QRIS" class="w-full h-full object-cover"></div>
+                        <div class="flex-1 overflow-hidden"><label class="block text-xs font-bold mb-1">Upload QRIS</label><input type="file" accept="image/*" onchange="handleQrisUpload(this)" class="text-xs text-gray-500 w-full"></div>
+                    </div>
+                    <div><label class="block text-xs font-bold">Nama Toko</label><input type="text" id="shop-name" class="w-full border p-2 rounded mt-1 text-sm bg-white"></div>
+                    <div class="mt-2"><label class="block text-xs font-bold">Alamat</label><input type="text" id="shop-address" class="w-full border p-2 rounded mt-1 text-sm bg-white"></div>
+                    <div class="mt-2"><label class="block text-xs font-bold text-blue-600">Google Sheet URL</label><input type="text" id="g-sheet-url" class="w-full border p-2 rounded mt-1 text-sm bg-white"></div>
+                    <button onclick="saveSettings()" class="w-full bg-green-600 text-white py-2 rounded-lg font-bold shadow-sm hover:bg-green-700 mt-4 text-xs">SIMPAN PENGATURAN</button>
+                </div>
+                <div class="p-4 bg-blue-50 rounded-lg border border-blue-100">
+                    <h3 class="font-bold text-sm mb-2 text-blue-800"><i class="fas fa-database mr-2"></i>Backup & Restore Data</h3>
+                    <div class="flex gap-2 mb-3">
+                        <button onclick="backupData()" class="flex-1 bg-blue-600 text-white py-2 rounded text-xs font-bold shadow hover:bg-blue-700"><i class="fas fa-download mr-1"></i> Download Backup</button>
+                    </div>
+                    <div class="border-t border-blue-200 pt-3">
+                        <label class="block text-[10px] font-bold text-blue-800 mb-1">Restore File Backup (.json)</label>
+                        <div class="flex gap-2">
+                            <input type="file" id="restore-file-input" accept=".json" class="text-[10px] text-gray-500 w-full bg-white border p-1 rounded">
+                            <button onclick="restoreData()" class="bg-orange-500 text-white px-3 py-1 rounded text-xs font-bold hover:bg-orange-600">Restore</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-4 bg-red-50 rounded-lg border border-red-100">
+                      <h3 class="font-bold text-sm mb-2 text-red-800">Zona Bahaya</h3>
+                      <button onclick="resetLaporan()" class="w-full border border-orange-300 text-orange-600 bg-white py-2 rounded text-xs font-bold hover:bg-orange-50 mb-2">Hapus Riwayat Transaksi (Menu Aman)</button>
+                      <button onclick="resetData()" class="w-full border border-red-300 text-red-500 bg-white py-2 rounded text-xs font-bold hover:bg-red-50">Reset Semua Data (Pabrik)</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 w-full bg-white border-t flex justify-around py-2 z-50 text-gray-400 text-[10px] safe-area-bottom shadow-[0_-2px_10px_rgba(0,0,0,0.05)] mobile-nav-height">
+        <button onclick="nav('kasir')" id="mob-kasir" class="flex flex-col items-center gap-1 w-1/5 active-nav-mobile text-red-500"><i class="fas fa-cash-register text-lg"></i><span>Kasir</span></button>
+        <button onclick="nav('open-bill')" id="mob-open-bill" class="flex flex-col items-center gap-1 w-1/5"><i class="fas fa-receipt text-lg"></i><span>Bills</span></button>
+        <button onclick="nav('katalog')" id="mob-katalog" class="flex flex-col items-center gap-1 w-1/5"><i class="fas fa-box text-lg"></i><span>Menu</span></button>
+        <button onclick="nav('laporan')" id="mob-laporan" class="flex flex-col items-center gap-1 w-1/5"><i class="fas fa-chart-bar text-lg"></i><span>Lapor</span></button>
+        <button onclick="nav('setting')" id="mob-setting" class="flex flex-col items-center gap-1 w-1/5"><i class="fas fa-cog text-lg"></i><span>Set</span></button>
+    </nav>
+
+    <div id="success-anim" class="fixed inset-0 bg-black/80 z-[60] hidden flex flex-col items-center justify-center text-white backdrop-blur-sm">
+        <div class="checkmark-circle"><div class="background"></div><div class="checkmark draw"></div></div>
+        <div class="text-2xl font-bold mt-4 animate-bounce">Pembayaran Berhasil!</div><div class="text-sm mt-2">Mencetak struk...</div>
+    </div>
+    
+    <div id="toast-container" class="bg-gray-800 text-white px-4 py-2 rounded-full shadow-lg text-xs font-bold flex items-center gap-2">
+        <i class="fas fa-check-circle text-green-400"></i> <span id="toast-message">Item ditambahkan</span>
+    </div>
+
+    <div id="menu-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 transition-opacity duration-300">
+        <div id="modal-content-box" class="bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-popup-content">
+            <div class="relative">
+                <img id="modal-menu-img" src="" class="w-full h-48 object-cover">
+                <button onclick="closeMenuModal()" class="absolute top-2 right-2 bg-black/50 text-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-black/70 transition hover:rotate-90"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-4 flex-1 overflow-y-auto">
+                <h3 id="modal-menu-name" class="font-black text-xl text-gray-800 leading-tight"></h3>
+                <p id="modal-menu-price" class="text-red-600 font-bold text-lg mb-4"></p>
+                
+                <div id="modal-addons-section" class="mb-4 hidden">
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Pilih Toping / Add-ons</label>
+                    <div id="modal-addons-list" class="space-y-2"></div>
+                </div>
+
+                <div class="flex items-center justify-between bg-gray-50 p-3 rounded-lg border">
+                    <span class="text-sm font-bold text-gray-600">Jumlah</span>
+                    <div class="flex items-center gap-3">
+                        <button onclick="adjModalQty(-1)" class="w-8 h-8 bg-white border rounded-full text-gray-600 flex items-center justify-center shadow-sm active:scale-90 font-bold hover:bg-gray-100 transition">-</button>
+                        <span id="modal-menu-qty" class="font-bold text-lg w-6 text-center">1</span>
+                        <button onclick="adjModalQty(1)" class="w-8 h-8 bg-red-500 text-white border border-red-500 rounded-full flex items-center justify-center shadow-sm active:scale-90 font-bold hover:bg-red-600 transition">+</button>
+                    </div>
+                </div>
+            </div>
+            <div class="p-3 border-t bg-white">
+                <button onclick="processAddToCart()" class="w-full bg-red-600 text-white py-3 rounded-xl font-bold shadow-lg text-sm flex justify-center items-center gap-2 active:scale-95 transition hover:bg-red-700">
+                    <span>Masuk Keranjang</span>
+                    <span id="modal-total-btn" class="bg-red-800 px-2 py-0.5 rounded text-xs"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="payment-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="bg-gray-800 text-white p-3 flex justify-between items-center"><h3 class="font-bold">Pembayaran</h3><button onclick="closeModal()" class="text-gray-400 hover:text-white px-2"><i class="fas fa-times"></i></button></div>
+            <div class="p-4 flex-1 overflow-y-auto">
+                <div class="text-center mb-4"><div class="text-xs text-gray-500">Total Tagihan</div><div class="text-3xl font-bold text-gray-800" id="modal-total-display">Rp 0</div></div>
+                <div class="flex gap-2 mb-4">
+                    <button onclick="setPaymentMethod('cash')" id="btn-pm-cash" class="flex-1 py-2 border-2 border-green-500 bg-green-50 text-green-700 font-bold rounded text-sm">CASH</button>
+                    <button onclick="setPaymentMethod('qris')" id="btn-pm-qris" class="flex-1 py-2 border border-gray-300 text-gray-500 rounded text-sm">QRIS</button>
+                </div>
+                <div id="view-cash">
+                    <div class="bg-gray-50 p-3 rounded border mb-3">
+                        <div class="flex justify-between mb-1"><span class="text-xs">Diterima</span><span id="cash-received-display" class="font-bold text-lg">0</span></div>
+                        <div class="flex justify-between border-t pt-1"><span class="text-xs font-bold text-gray-600">KEMBALI</span><span id="change-display" class="font-bold text-xl text-green-600">0</span></div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2 mb-3">
+                        <button onclick="setUangPas()" class="bg-blue-100 text-blue-700 text-[10px] py-2 rounded font-bold">Uang Pas</button>
+                        <button onclick="addNominal(10000)" class="bg-gray-100 text-[10px] py-2 rounded">+10rb</button>
+                        <button onclick="addNominal(50000)" class="bg-gray-100 text-[10px] py-2 rounded">+50rb</button>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button onclick="inputNumpad('7')" class="bg-white border shadow-sm py-3 text-lg font-bold rounded">7</button>
+                        <button onclick="inputNumpad('8')" class="bg-white border shadow-sm py-3 text-lg font-bold rounded">8</button>
+                        <button onclick="inputNumpad('9')" class="bg-white border shadow-sm py-3 text-lg font-bold rounded">9</button>
+                        <button onclick="inputNumpad('4')" class="bg-white border shadow-sm py-3 text-lg font-bold rounded">4</button>
+                        <button onclick="inputNumpad('5')" class="bg-white border shadow-sm py-3 text-lg font-bold rounded">5</button>
+                        <button onclick="inputNumpad('6')" class="bg-white border shadow-sm py-3 text-lg font-bold rounded">6</button>
+                        <button onclick="inputNumpad('1')" class="bg-white border shadow-sm py-3 text-lg font-bold rounded">1</button>
+                        <button onclick="inputNumpad('2')" class="bg-white border shadow-sm py-3 text-lg font-bold rounded">2</button>
+                        <button onclick="inputNumpad('3')" class="bg-white border shadow-sm py-3 text-lg font-bold rounded">3</button>
+                        <button onclick="inputNumpad('C')" class="bg-red-50 text-red-500 font-bold rounded">C</button>
+                        <button onclick="inputNumpad('0')" class="bg-white border shadow-sm py-3 text-lg font-bold rounded">0</button>
+                        <button onclick="inputNumpad('00')" class="bg-white border shadow-sm py-3 text-lg font-bold rounded">00</button>
+                    </div>
+                </div>
+                <div id="view-qris" class="hidden text-center">
+                    <div class="bg-blue-50 p-4 rounded-xl border-2 border-blue-200 mb-4">
+                        <div class="text-xs text-blue-800 font-bold mb-2 uppercase tracking-widest">Scan QRIS Berikut</div>
+                        <img id="qris-display-img" src="https://via.placeholder.com/300?text=Belum+Upload+QRIS" class="w-48 h-48 object-cover mx-auto rounded-lg shadow-sm border bg-white">
+                        <div class="mt-3 text-xs text-gray-500">Total Pembayaran</div>
+                        <div class="text-2xl font-black text-gray-800 mt-1" id="qris-amount-display">Rp 0</div>
+                    </div>
+                </div>
+            </div>
+            <div class="p-3 border-t"><button onclick="processPayment()" id="btn-finish-pay" class="w-full bg-green-600 text-white py-3 rounded-xl font-bold shadow-lg text-sm">Bayar & Cetak</button></div>
+        </div>
+    </div>
+
+    <div id="print-area"></div>
+
+    <script src="script.js"></script>
+    
+    </body>
+
+</html>
+
+
